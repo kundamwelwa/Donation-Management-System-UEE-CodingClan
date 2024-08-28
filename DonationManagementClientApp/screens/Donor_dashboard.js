@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    marginBottom: height * 0.03,
+    marginBottom: height * 0.10,
   },
   donateButtonText: {
     color: '#FFFFFF',
@@ -290,15 +290,20 @@ const styles = StyleSheet.create({
     color: '#FF5722',
   },
   bottomNav: {
-    maxWidth: 550,
+    width: '100%', // Ensure it spans the full width of the screen
     flexDirection: 'row',
     backgroundColor: '#201E43',
     justifyContent: 'space-between',
     paddingVertical: '3%',
-    paddingHorizontal: '4%',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-  },
+    paddingHorizontal: '4%', // Adjust or remove if needed
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    position: 'absolute', // Stick the navbar to the bottom
+    bottom: 0,
+    left: 0, // Stick the navbar to the left edge
+    right: 0, // Stick the navbar to the right edge
+ },
+
   navButton: {
     alignItems: 'center',
   },
