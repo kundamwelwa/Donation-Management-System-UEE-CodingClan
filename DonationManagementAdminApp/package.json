@@ -9,23 +9,24 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/webpack-config": "^0.17.0",
-    "@react-native-community/datetimepicker": "^6.5.4",
-    "@react-navigation/native": "^5.8.9",
-    "@react-navigation/stack": "^5.12.6",
-    "expo": "~46.0.16",
-    "expo-status-bar": "~1.4.0",
-    "react": "18.0.0",
-    "react-dom": "18.0.0",
-    "react-native": "0.69.6",
+    "@expo/webpack-config": "^19.0.1",
+    "@react-native-community/datetimepicker": "8.0.1",
+    "@react-navigation/native": "^6.1.1",
+    "@react-navigation/stack": "^6.1.1",
+    "expo": "^51.0.28",
+    "expo-status-bar": "~1.12.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-native": "0.75.1",
     "react-native-form-inputs": "^0.0.5",
     "react-native-inputs": "^0.2.1",
     "react-native-paper": "^4.12.5",
-    "react-native-screens": "^3.18.2",
-    "react-native-web": "~0.18.7"
+    "react-native-screens": "3.31.1",
+    "react-native-web": "~0.19.10"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.12.9",
+    "metro-react-native-babel-preset": "^0.77.0"
   },
   "private": true
 }
