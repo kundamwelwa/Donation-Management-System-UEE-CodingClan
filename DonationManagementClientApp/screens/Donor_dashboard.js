@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, ScrollView, LayoutAnimation } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions,Image, ScrollView, LayoutAnimation } from 'react-native';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 
@@ -17,13 +17,21 @@ const ongoingCampaigns = [
   // Add more campaigns as needed
 ];
 
+const Orphanage1 = require('../assets/Images/Orphanage1.jpg');
+const Orphanage2 = require('../assets/Images/Orphanage2.jpg');
+const Orphanage3 = require('../assets/Images/Orphanage3.jpg');
+const Orphanage4 = require('../assets/Images/Orphanage4.jpg');
+
+
 const orphanageCards = [
-  { id: '1', name: 'Orphanage 1', description: 'Helping underprivileged children.' },
-  { id: '2', name: 'Orphanage 2', description: 'Providing food and shelter.' },
-  { id: '3', name: 'Orphanage 3', description: 'Supporting education.' },
-  { id: '4', name: 'Orphanage 4', description: 'Offering medical aid.' },
+  { id: '1', name: 'Orphanage 1', description: 'Helping underprivileged children.', coverPhoto: Orphanage1 },
+  { id: '2', name: 'Orphanage 2', description: 'Providing food and shelter.', coverPhoto: Orphanage2 },
+  { id: '3', name: 'Orphanage 3', description: 'Supporting education.', coverPhoto: Orphanage3 },
+  { id: '4', name: 'Orphanage 4', description: 'Offering medical aid.', coverPhoto: Orphanage4 },
   // Add more orphanage cards as needed
 ];
+
+
 
 const Donor_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home'); // Manage active section
@@ -48,11 +56,21 @@ const Donor_Dashboard = ({ navigation }) => {
           <ScrollView style={styles.orphanageCards} horizontal showsHorizontalScrollIndicator={false}>
             {orphanageCards.map((item) => (
               <Card key={item.id} style={styles.card}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardValue}>{item.description}</Text>
+                <View style={styles.coverPhotoContainer}>
+                  <Image source={item.coverPhoto} style={styles.coverPhoto} />
+                </View>
+                <View style={styles.cardFooter}>
+                  <Text style={styles.cardTitle}>{item.name}</Text>
+                  <TouchableOpacity style={styles.exploreButton} onPress={() => navigation.navigate('OrphanageDetails', { orphanageId: item.id })}>
+                    <Text style={styles.exploreButtonText}>Explore</Text>
+                    <FontAwesome name="arrow-right" size={20} color="white" />
+                  </TouchableOpacity>
+                </View>
               </Card>
             ))}
           </ScrollView>
+
+
 
           <TouchableOpacity style={styles.donateButton} onPress={() => navigation.navigate('Donate')}>
             <FontAwesome name="dollar" size={30} color="white" />
@@ -128,7 +146,7 @@ const Donor_Dashboard = ({ navigation }) => {
           <FontAwesome name="bell" size={24} color="white" />
           <Text style={styles.navButtonText}>Notifications</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Profile')}>
+        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Donor_Profile')}>
           <FontAwesome name="user" size={24} color="white" />
           <Text style={styles.navButtonText}>Profile</Text>
         </TouchableOpacity>
@@ -140,122 +158,156 @@ const Donor_Dashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.01, // 5% of screen width
-    paddingBottom: height * 0.01, // 2% of screen height
+    paddingHorizontal: width * 0.01,
+    paddingBottom: height * 0.01,
   },
   userCard: {
-    marginTop: height * 0.01, // 5% of screen height
-    paddingVertical: height * 0.11, // 8% of screen height
-    paddingHorizontal: width * 0.06, // 6% of screen width
-    backgroundColor: '#2C2C2E',
+    marginTop: height * 0.01,
+    paddingVertical: height * 0.11,
+    paddingHorizontal: width * 0.06,
+    backgroundColor: '#201E43',
     borderRadius: 10,
-    marginBottom: height * 0.01, // 2% of screen height
+    marginBottom: height * 0.01,
     alignItems: 'center',
   },
   userName: {
-    fontSize: width * 0.07, // 7% of screen width
+    fontSize: width * 0.07,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   userDate: {
-    fontSize: width * 0.04, // 4% of screen width
+    fontSize: width * 0.04,
     color: '#CCCCCC',
   },
   spacer: {
-    height: height * 0.02, // 2% of screen height
+    height: height * 0.02,
   },
   orphanageCards: {
-    marginBottom: height * 0.03, // 3% of screen height
-    paddingVertical: height * 0.00, // 8% of screen height
+    marginBottom: height * 0.03,
+    paddingVertical: height * 0.00,
     textAlign: 'center',
-    
   },
   card: {
-    width: width * 0.75, // 75% of screen width
-    padding: width * 0.05, // 5% of screen width
-    marginHorizontal: width * 0.02, // 2% of screen width
+    width: width * 0.75,
+    height: width * 0.7, // Ensure height fits the aspect ratio
+    marginHorizontal: width * 0.02,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  coverPhoto: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  cardFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    padding: width * 0.05,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)', // Semi-transparent background
+    width: '100%',
+    borderBottomLeftRadius: 10,
+    borderTopRightRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   cardTitle: {
-    fontSize: width * 0.05, // 5% of screen width
+    fontSize: width * 0.05,
     fontWeight: 'bold',
+    color: '#000000',
   },
-  cardValue: {
-    fontSize: width * 0.04, // 4% of screen width
-    color: '#666666',
+  exploreButton: {
+    backgroundColor: '#201E43',
+    paddingVertical: height * 0.01,
+    paddingHorizontal: width * 0.04,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  exploreButtonText: {
+    color: '#FFFFFF',
+    fontSize: width * 0.04,
+    marginRight: width * 0.02,
   },
   donateButton: {
     backgroundColor: '#4CAF50',
-    paddingVertical: height * 0.02, // 2% of screen height
-    paddingHorizontal: width * 0.00, // 5% of screen width
+    paddingVertical: height * 0.02,
+    paddingHorizontal: width * 0.00,
     borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    marginBottom: height * 0.03, // 3% of screen height
+    marginBottom: height * 0.03,
   },
   donateButtonText: {
     color: '#FFFFFF',
-    fontSize: width * 0.06, // 5% of screen width
-    marginLeft: width * 0.02, // 2% of screen width
+    fontSize: width * 0.06,
+    marginLeft: width * 0.02,
   },
   dashboardOverview: {
-    marginBottom: height * 0.00, // 3% of screen height
+    marginBottom: height * 0.03,
     marginBottom: 20,
+    paddingVertical: -height * 0.1,
   },
   sectionTitle: {
-    fontSize: width * 0.05, // 5% of screen width
+    fontSize: width * 0.05,
     fontWeight: 'bold',
-    marginBottom: height * 0.02, // 2% of screen height
+    marginBottom: height * 0.02,
   },
   historyCard: {
-    padding: width * 0.05, // 5% of screen width
-    marginBottom: height * 0.02, // 2% of screen height
+    padding: width * 0.05,
+    marginBottom: height * 0.02,
     backgroundColor: '#F9F9F9',
     borderRadius: 10,
   },
   historyDate: {
-    fontSize: width * 0.045, // 4.5% of screen width
+    fontSize: width * 0.045,
     fontWeight: 'bold',
   },
   historyAmount: {
-    fontSize: width * 0.04, // 4% of screen width
+    fontSize: width * 0.04,
     color: '#4CAF50',
   },
   historyCampaign: {
-    fontSize: width * 0.04, // 4% of screen width
+    fontSize: width * 0.04,
     color: '#666666',
   },
   campaignCard: {
-    padding: width * 0.05, // 5% of screen width
-    marginBottom: height * 0.02, // 2% of screen height
+    padding: width * 0.05,
+    marginBottom: height * 0.02,
     backgroundColor: '#F9F9F9',
     borderRadius: 10,
   },
   campaignName: {
-    fontSize: width * 0.045, // 4.5% of screen width
+    fontSize: width * 0.045,
     fontWeight: 'bold',
   },
   campaignStatus: {
-    fontSize: width * 0.04, // 4% of screen width
+    fontSize: width * 0.04,
     color: '#FF5722',
   },
   bottomNav: {
+    maxWidth: 550,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: height * 0.03, // 2% of screen height
-    paddingHorizontal: height * 0.01,
-    backgroundColor: '#333333',
-    borderRadius: 14,
+    backgroundColor: '#201E43',
+    justifyContent: 'space-between',
+    paddingVertical: '3%',
+    paddingHorizontal: '4%',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   navButton: {
     alignItems: 'center',
   },
   navButtonText: {
     color: '#FFFFFF',
-    fontSize: width * 0.03, // 4% of screen width
+    fontSize: width * 0.03,
   },
 });
+
+
 
 export default Donor_Dashboard;
