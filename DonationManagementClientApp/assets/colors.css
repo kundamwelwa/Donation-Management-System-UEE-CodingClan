@@ -1,0 +1,26 @@
+/* Color theme for the Orphanage side of the app*/
+/*{Buttons = #e74c3c}*/
+/*{Cards = #EEEEEE}*/
+/*{Cards = #201E43}*/
+
+
+},
+filterButton: {
+  marginLeft: width * 0.02,
+  backgroundColor: '#0033A0',
+  padding: width * 0.02,
+  borderRadius: 5,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+filtersContainer: {
+  marginBottom: height * 0.02,
+},
+filterLabel: {
+  fontSize: width * 0.05,
+  fontWeight: 'bold',
+  marginBottom: height * 0.01,
+},
+picker: {
+  height: height * 0.05,
+  marginBottom: height * 0.01,

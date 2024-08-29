@@ -8,7 +8,9 @@ import Login_choice from './screens/Login_choice';
 import Orphanage_Signup from './screens/Orphanage_Signup';
 import Donor_Login from './screens/Donor_Login';
 import Orphanage_Login from './screens/Orphanage_Login';
+import Orphanage_profile from './screens/Orphanage_profile';
 import Donor_Profile from './screens/Donor_Profile';
+import Donation from './screens/Donation';
 import Donor_Signup from './screens/Donor_Signup';
 import Splash from './screens/Splash';
 import AddCard from './screens/AddCard';
@@ -39,8 +41,10 @@ export default function App() {
         <Stack.Screen name="Donor_Signup" component={Donor_Signup} />
         <Stack.Screen name="Orphanage_Login" component={Orphanage_Login} />
         <Stack.Screen name="Orphanage_Signup" component={Orphanage_Signup} />
+        <Stack.Screen name="Donation" component={Donation} />
         <Stack.Screen name="Register" component={Register} />
         <Stack.Screen name="Orphanage_Dashboard" component={Orphanage_Dashboard} />
+        <Stack.Screen name="Orphanage_profile" component={Orphanage_profile} />
         <Stack.Screen name="Donor_dashboard" component={Donor_dashboard} />
         <Stack.Screen name="Donor_Profile" component={Donor_Profile} />
         <Stack.Screen name="AddDonation" component={AddDonation} />

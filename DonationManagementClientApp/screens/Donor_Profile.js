@@ -139,14 +139,11 @@ const Donor_Profile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.01,
     paddingBottom: height * 0.05,
     marginBottom: height * 0.02,
   },
   userCard: {
-    marginTop: height * 0.01,
     backgroundColor: '#EEF7FF',
-    borderRadius: 10,
     marginBottom: height * 0.02,
     overflow: 'hidden',
   },
@@ -207,14 +204,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: height * 0.02,
+    marginLeft: 7,
+    marginRight: 7,
   },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#201E43',
-    padding: width * 0.04,
+    padding: width * 0.03,
     borderRadius: 20,
-    width: width * 0.44,
+    width: width * 0.43,
   },
   buttonText: {
     color: '#fff',
@@ -312,7 +311,7 @@ const styles = StyleSheet.create({
     color: '#555',
   },
   logoutButton: {
-    backgroundColor: '#201E43',
+    backgroundColor: '#FF204E',
     marginTop: height * 0.02,
     justifyContent: 'center',
     alignSelf: 'center',

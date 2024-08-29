@@ -72,7 +72,7 @@ const Donor_Dashboard = ({ navigation }) => {
 
 
 
-          <TouchableOpacity style={styles.donateButton} onPress={() => navigation.navigate('Donate')}>
+          <TouchableOpacity style={styles.donateButton} onPress={() => navigation.navigate('Donation')}>
             <FontAwesome name="dollar" size={30} color="white" />
             <Text style={styles.donateButtonText}>Donate</Text>
           </TouchableOpacity>
@@ -158,11 +158,9 @@ const Donor_Dashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.01,
     paddingBottom: height * 0.01,
   },
   userCard: {
-    marginTop: height * 0.01,
     paddingVertical: height * 0.11,
     paddingHorizontal: width * 0.06,
     backgroundColor: '#201E43',
@@ -235,8 +233,8 @@ const styles = StyleSheet.create({
   donateButton: {
     backgroundColor: '#4CAF50',
     paddingVertical: height * 0.02,
-    paddingHorizontal: width * 0.00,
-    borderRadius: 25,
+    marginHorizontal: width * 0.2,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -300,8 +298,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
     position: 'absolute', // Stick the navbar to the bottom
     bottom: 0,
-    left: 0, // Stick the navbar to the left edge
-    right: 0, // Stick the navbar to the right edge
  },
 
   navButton: {

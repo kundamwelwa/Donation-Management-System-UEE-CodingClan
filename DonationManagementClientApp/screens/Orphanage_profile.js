@@ -1,95 +1,135 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Modal, Dimensions } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
 import { Card } from 'react-native-paper';
-import { FontAwesome } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker'; // Importing ImagePicker for uploading images
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const { width, height } = Dimensions.get('window');
 
-const OrphanageProfile = () => {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
+const Orphanage_profile = () => {
+  const [bioExpanded, setBioExpanded] = useState(false);
+  const [profilePhoto, setProfilePhoto] = useState(require('../assets/Images/Orphanageuser1.jpg'));
+  const [coverPhoto, setCoverPhoto] = useState(require('../assets/Images/Orphanagecover1.jpg'));
 
-  const galleryImages = [
-    'https://example.com/image1.jpg',
-    'https://example.com/image2.jpg',
-    'https://example.com/image3.jpg',
-  ];
+  const pickImage = async (setImage) => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-  const openModal = (imageUri) => {
-    setSelectedImage(imageUri);
-    setModalVisible(true);
-  };
-
-  const logout = () => {
-    // Handle logout
+    if (!result.canceled) {
+      setImage({ uri: result.uri });
+    }
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Profile Picture and Edit Button */}
-      <View style={styles.profileSection}>
-        <Image
-          source={{ uri: 'https://example.com/profile-picture.jpg' }}
-          style={styles.profilePicture}
-        />
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>Edit Profile</Text>
+      {/* Orphanage Card with Cover Photo */}
+      <Card style={styles.userCard}>
+        <View style={styles.coverContainer}>
+          <TouchableOpacity onPress={() => pickImage(setCoverPhoto)}>
+            <Image source={coverPhoto} style={styles.coverPhoto} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.userInfo}>
+          <TouchableOpacity onPress={() => pickImage(setProfilePhoto)}>
+            <Image source={profilePhoto} style={styles.profilePhoto} />
+          </TouchableOpacity>
+          <View style={styles.userDetailsContainer}>
+            <View style={styles.userDetails}>
+              <Text style={styles.userName}>Hope Orphanage</Text>
+              <Text style={styles.userEmail}>hopeorphanage@example.com</Text>
+            </View>
+            <View style={styles.socialMediaIcons}>
+              <TouchableOpacity style={styles.iconButton}>
+                <AntDesign name="twitter" size={20} color="#1DA1F2" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton}>
+                <FontAwesome name="facebook" size={20} color="#1877F2" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.iconButton}>
+                <FontAwesome name="instagram" size={20} color="#C13584" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Card>
+
+      {/* Edit Profile and Settings Buttons Side by Side */}
+      <View style={styles.buttonRow}>
+        <TouchableOpacity style={styles.button}>
+          <Icon name="edit" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Edit Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button}>
+          <Icon name="settings" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Settings</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Settings Section */}
-      <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Settings</Text>
-        <TouchableOpacity style={styles.settingsOption}>
-          <FontAwesome name="user" size={24} color="#4A90E2" />
-          <Text style={styles.settingsOptionText}>Account Settings</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingsOption}>
-          <FontAwesome name="bell" size={24} color="#4A90E2" />
-          <Text style={styles.settingsOptionText}>Notifications</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingsOption}>
-          <FontAwesome name="lock" size={24} color="#4A90E2" />
-          <Text style={styles.settingsOptionText}>Privacy</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.settingsOption}>
-          <FontAwesome name="info-circle" size={24} color="#4A90E2" />
-          <Text style={styles.settingsOptionText}>About Us</Text>
-        </TouchableOpacity>
+      {/* Biography Section */}
+      <TouchableOpacity onPress={() => setBioExpanded(!bioExpanded)}>
+        <Card style={styles.bioCard}>
+          <View style={styles.cardHeader}>
+            <MaterialCommunityIcons name="account" size={20} color="#333" />
+            <Text style={styles.bioHeader}>Biography</Text>
+          </View>
+          <Text style={styles.bioText}>
+            We are dedicated to providing a loving home and quality education to orphans.
+            {bioExpanded ? (
+              <Text style={styles.fullBioText}>
+                {"\n"}Founded in 1995, Hope Orphanage has been a beacon of hope for children in need. We provide shelter, education, and healthcare to over 100 children each year.
+              </Text>
+            ) : (
+              <Text style={styles.expandText}>...Read more</Text>
+            )}
+          </Text>
+        </Card>
+      </TouchableOpacity>
+
+      {/* Recent Projects Section */}
+      <Card style={styles.projectsCard}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="lightbulb-on-outline" size={20} color="#333" />
+          <Text style={styles.projectsHeader}>Recent Projects</Text>
+        </View>
+        <Text style={styles.projectText}>
+          - New dormitory construction completed in June 2024.
+          - Launched a vocational training program for older children.
+          - Hosted a community health camp in July 2024.
+        </Text>
       </Card>
 
-      {/* Gallery Section */}
-      <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Gallery</Text>
-        <View style={styles.galleryContainer}>
-          {galleryImages.map((imageUri, index) => (
-            <TouchableOpacity key={index} onPress={() => openModal(imageUri)}>
-              <Image source={{ uri: imageUri }} style={styles.galleryImage} />
-            </TouchableOpacity>
-          ))}
+      {/* Donation Options Section */}
+      <Card style={styles.donationCard}>
+        <View style={styles.cardHeader}>
+          <FontAwesome name="handshake-o" size={20} color="#333" />
+          <Text style={styles.donationHeader}>Donation Options</Text>
         </View>
+        <Text style={styles.donationText}>
+          You can support us by donating items such as food, clothing, and books, or through monetary contributions.
+        </Text>
       </Card>
 
-      {/* Image Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalView}>
-          <Image source={{ uri: selectedImage }} style={styles.fullImage} />
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setModalVisible(false)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
+      {/* Privacy and Communication Settings */}
+      <Card style={styles.settingsCard}>
+        <View style={styles.cardHeader}>
+          <MaterialCommunityIcons name="shield-outline" size={20} color="#333" />
+          <Text style={styles.settingsHeader}>Privacy Settings</Text>
         </View>
-      </Modal>
+        <Text style={styles.settingsText}>
+          Manage your privacy settings and communication preferences.
+        </Text>
+      </Card>
 
-      {/* Logout Button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+      {/* Logout Option */}
+      <TouchableOpacity style={styles.logoutButton}>
+        <AntDesign name="logout" size={20} color="#fff" />
         <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -99,106 +139,170 @@ const OrphanageProfile = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: width * 0.05, // 5% of screen width
-    paddingBottom: height * 0.02, // 2% of screen height
     backgroundColor: '#f8f8f8',
-  },
-  profileSection: {
-    alignItems: 'center',
-    marginTop: height * 0.05, // 5% of screen height
-  },
-  profilePicture: {
-    width: width * 0.4,
-    height: width * 0.4,
-    borderRadius: width * 0.2,
     marginBottom: height * 0.02,
   },
-  editButton: {
-    backgroundColor: '#4A90E2',
-    paddingVertical: height * 0.015,
-    paddingHorizontal: width * 0.2,
-    borderRadius: 5,
+  userCard: {
+    width: '100%',
+    marginBottom: 20,
+    paddingBottom: height * -0.01,
+    backgroundColor: '#EEEEEE',
+    borderLeftRadius: 30,
   },
-  editButtonText: {
-    color: 'white',
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
+  coverContainer: {
+    position: 'relative',
   },
-  card: {
-    marginVertical: height * 0.02,
+  coverPhoto: {
+    width: '100%',
+    height: height * 0.2,
+  },
+  userInfo: {
+    flexDirection: 'row',
     padding: width * 0.04,
-    backgroundColor: '#ffffff',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
   },
-  cardTitle: {
+  profilePhoto: {
+    width: width * 0.27,
+    height: width * 0.27,
+    borderRadius: width * 0.130,
+    borderWidth: 2,
+    borderColor: '#EEF7FF',
+    marginTop: -width * 0.1,
+  },
+  userDetailsContainer: {
+    paddingHorizontal: width * 0.04,
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between', // Make the user details and icons adapt
+  },
+  userDetails: {
+    marginBottom: width * 0.02,
+    maxWidth: '60%', // Adjust to ensure responsive text wrapping
+  },
+  userName: {
     fontSize: width * 0.05,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: height * 0.015,
   },
-  settingsOption: {
+  userEmail: {
+    fontSize: width * 0.035,
+    color: '#777',
+  },
+  socialMediaIcons: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: height * 0.015,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
   },
-  settingsOptionText: {
-    fontSize: width * 0.045,
-    marginLeft: width * 0.05,
-    color: '#333',
+  iconButton: {
+    marginRight: width * 0.03,
   },
-  galleryContainer: {
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    flexWrap: 'wrap',
+    marginBottom: width * 0.05,
+    paddingHorizontal: width * 0.03,
   },
-  galleryImage: {
-    width: width * 0.3,
-    height: height * 0.15,
-    marginBottom: height * 0.02,
-    borderRadius: 10,
-  },
-  modalView: {
-    flex: 1,
-    justifyContent: 'center',
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: '#201E43',
+    paddingVertical: width * 0.03,
+    paddingHorizontal: width * 0.05,
+    borderRadius: 20,
+    flex: 1,
+    marginHorizontal: width * 0.02,
   },
-  fullImage: {
-    width: '90%',
-    height: '70%',
-    borderRadius: 10,
+  buttonText: {
+    color: '#fff',
+    marginLeft: width * 0.02,
+    fontSize: width * 0.04,
   },
-  closeButton: {
-    marginTop: height * 0.03,
-    backgroundColor: '#FF6F61',
-    paddingVertical: height * 0.015,
-    paddingHorizontal: width * 0.2,
-    borderRadius: 5,
+  bioCard: {
+    marginBottom: 0,
+    padding: width * 0.04,
+    borderRadius: 0,
+    backgroundColor: '#EEEEEE',
   },
-  closeButtonText: {
-    color: 'white',
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: width * 0.03,
+  },
+  bioHeader: {
+    marginLeft: width * 0.03,
     fontSize: width * 0.045,
     fontWeight: 'bold',
+  },
+  bioText: {
+    fontSize: width * 0.035,
+    color: '#555',
+  },
+  fullBioText: {
+    fontSize: width * 0.035,
+    color: '#555',
+  },
+  expandText: {
+    color: '#0066cc',
+    marginTop: width * 0.01,
+  },
+  projectsCard: {
+    marginBottom: 0,
+    padding: width * 0.04,
+    borderRadius: 0,
+    backgroundColor: '#EEEEEE',
+  },
+  projectsHeader: {
+    marginLeft: width * 0.03,
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+  },
+  projectText: {
+    fontSize: width * 0.035,
+    color: '#555',
+  },
+  donationCard: {
+    marginBottom: 0,
+    padding: width * 0.04,
+    borderRadius: 0,
+    backgroundColor: '#EEEEEE',
+  },
+  donationHeader: {
+    marginLeft: width * 0.03,
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+  },
+  donationText: {
+    fontSize: width * 0.035,
+    color: '#555',
+  },
+  settingsCard: {
+    marginBottom: width * 0.05,
+    padding: width * 0.04,
+    borderRadius: 0,
+    backgroundColor: '#EEEEEE',
+  },
+  settingsHeader: {
+    marginLeft: width * 0.03,
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+  },
+  settingsText: {
+    fontSize: width * 0.035,
+    color: '#555',
   },
   logoutButton: {
-    backgroundColor: '#FF6F61',
-    paddingVertical: height * 0.015,
-    borderRadius: 5,
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: height * 0.03,
+    justifyContent: 'center',
+    backgroundColor: '#ff3b30',
+    paddingVertical: width * 0.04,
+    marginHorizontal: width * 0.3,
+    borderRadius: 30,
+    marginBottom: height * 0.04,
   },
   logoutButtonText: {
-    color: 'white',
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
+    color: '#fff',
+    marginLeft: width * 0.02,
+    fontSize: width * 0.04,
   },
 });
 
-export default OrphanageProfile;
+export default Orphanage_profile;

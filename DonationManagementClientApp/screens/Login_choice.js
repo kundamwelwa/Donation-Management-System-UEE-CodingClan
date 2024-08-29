@@ -26,7 +26,7 @@ const LoginChoice = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#201E43", // Solid blue color
+    backgroundColor: "#F7F7F8", // Solid blue color
     alignItems: "center",
     justifyContent: "center",
     padding: 20, // Added padding for better spacing
@@ -35,8 +35,8 @@ const styles = StyleSheet.create({
     width: '80%', // Adjust width as needed
     paddingVertical: 15,
     marginVertical: 10,
-    backgroundColor: "#0056A0", // A contrasting shade of blue
-    borderRadius: 5,
+    backgroundColor: "#201E43", // A contrasting shade of blue
+    borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
   },
