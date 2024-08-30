@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions,Image, ScrollView, LayoutAnimation } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, ScrollView, LayoutAnimation } from 'react-native';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
+// Sample data for donation history and ongoing campaigns
 const donationHistory = [
   { id: '1', date: '2024-08-15', amount: '$100', campaign: 'Feed the Children' },
   { id: '2', date: '2024-07-22', amount: '$50', campaign: 'Clothing Drive' },
@@ -17,11 +18,11 @@ const ongoingCampaigns = [
   // Add more campaigns as needed
 ];
 
+// Sample data for orphanage cards
 const Orphanage1 = require('../assets/Images/Orphanage1.jpg');
 const Orphanage2 = require('../assets/Images/Orphanage2.jpg');
 const Orphanage3 = require('../assets/Images/Orphanage3.jpg');
 const Orphanage4 = require('../assets/Images/Orphanage4.jpg');
-
 
 const orphanageCards = [
   { id: '1', name: 'Orphanage 1', description: 'Helping underprivileged children.', coverPhoto: Orphanage1 },
@@ -30,8 +31,6 @@ const orphanageCards = [
   { id: '4', name: 'Orphanage 4', description: 'Offering medical aid.', coverPhoto: Orphanage4 },
   // Add more orphanage cards as needed
 ];
-
-
 
 const Donor_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home'); // Manage active section
@@ -61,7 +60,10 @@ const Donor_Dashboard = ({ navigation }) => {
                 </View>
                 <View style={styles.cardFooter}>
                   <Text style={styles.cardTitle}>{item.name}</Text>
-                  <TouchableOpacity style={styles.exploreButton} onPress={() => navigation.navigate('OrphanageDetails', { orphanageId: item.id })}>
+                  <TouchableOpacity 
+                    style={styles.exploreButton} 
+                    onPress={() => navigation.navigate('Orphanage_Feed', { orphanageId: item.id })}
+                  >
                     <Text style={styles.exploreButtonText}>Explore</Text>
                     <FontAwesome name="arrow-right" size={20} color="white" />
                   </TouchableOpacity>
@@ -69,8 +71,6 @@ const Donor_Dashboard = ({ navigation }) => {
               </Card>
             ))}
           </ScrollView>
-
-
 
           <TouchableOpacity style={styles.donateButton} onPress={() => navigation.navigate('Donation')}>
             <FontAwesome name="dollar" size={30} color="white" />
@@ -249,6 +249,7 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.03,
     marginBottom: 20,
     paddingVertical: -height * 0.1,
+    
   },
   sectionTitle: {
     fontSize: width * 0.05,
