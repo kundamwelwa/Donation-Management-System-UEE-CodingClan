@@ -7,24 +7,19 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
-  Image,
   Alert,
   Platform,
   KeyboardAvoidingView,
   ScrollView,
   SafeAreaView
 } from 'react-native';
-import StatusBarManager from '../Component/StatusBarManager';
-import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
 const ProjectForm = ({
   onSubmit,
-  coverImage,
-  onImagePicker,
   projectName,
   setProjectName,
   description,
@@ -48,35 +43,39 @@ const ProjectForm = ({
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.formContainer}>
-        <TouchableOpacity onPress={onImagePicker} style={styles.imagePicker}>
-          {coverImage ? (
-            <Image source={coverImage} style={styles.coverImage} />
-          ) : (
-            <FontAwesome name="camera" size={30} color="#134B70" />
-          )}
-          <Text style={styles.imagePickerText}>Upload Cover Image</Text>
-        </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <FontAwesome name="edit" size={20} color="#2B3467" />
+          <TextInput
+            style={styles.input}
+            placeholder="Project Name"
+            value={projectName}
+            onChangeText={setProjectName}
+          />
+        </View>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Project Name"
-          value={projectName}
-          onChangeText={setProjectName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Project Type"
-          value={projectType}
-          onChangeText={setProjectType}
-        />
-        <TouchableOpacity onPress={() => setShowStartDatePicker(true)} style={styles.input}>
-          <Text>{`Start Date: ${startDate.toDateString()}`}</Text>
+        <View style={styles.inputContainer}>
+          <MaterialIcons name="description" size={20} color="#2B3467" />
+          <TextInput
+            style={styles.input}
+            placeholder="Description"
+            value={description}
+            onChangeText={setDescription}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <FontAwesome name="list-alt" size={20} color="#2B3467" />
+          <TextInput
+            style={styles.input}
+            placeholder="Project Type"
+            value={projectType}
+            onChangeText={setProjectType}
+          />
+        </View>
+
+        <TouchableOpacity onPress={() => setShowStartDatePicker(true)} style={styles.inputContainer}>
+          <FontAwesome name="calendar" size={20} color="#2B3467" />
+          <Text style={styles.input}>{`Start Date: ${startDate.toDateString()}`}</Text>
         </TouchableOpacity>
         {showStartDatePicker && (
           <DateTimePicker
@@ -89,8 +88,10 @@ const ProjectForm = ({
             }}
           />
         )}
-        <TouchableOpacity onPress={() => setShowEndDatePicker(true)} style={styles.input}>
-          <Text>{`End Date: ${endDate.toDateString()}`}</Text>
+
+        <TouchableOpacity onPress={() => setShowEndDatePicker(true)} style={styles.inputContainer}>
+          <FontAwesome name="calendar-check-o" size={20} color="#2B3467" />
+          <Text style={styles.input}>{`End Date: ${endDate.toDateString()}`}</Text>
         </TouchableOpacity>
         {showEndDatePicker && (
           <DateTimePicker
@@ -103,12 +104,16 @@ const ProjectForm = ({
             }}
           />
         )}
-        <TextInput
-          style={styles.input}
-          placeholder="Location"
-          value={location}
-          onChangeText={setLocation}
-        />
+
+        <View style={styles.inputContainer}>
+          <FontAwesome name="map-marker" size={20} color="#2B3467" />
+          <TextInput
+            style={styles.input}
+            placeholder="Location"
+            value={location}
+            onChangeText={setLocation}
+          />
+        </View>
 
         <TouchableOpacity onPress={onSubmit} style={styles.submitButton}>
           <Text style={styles.submitButtonText}>Submit Project</Text>
@@ -125,21 +130,7 @@ const ProjectListing = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [location, setLocation] = useState('');
-  const [coverImage, setCoverImage] = useState(null);
   const [projects, setProjects] = useState([]);
-
-  const handleImagePicker = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setCoverImage({ uri: result.uri });
-    }
-  };
 
   const handleSubmit = () => {
     if (!projectName || !description || !projectType || !location) {
@@ -148,14 +139,13 @@ const ProjectListing = () => {
     }
 
     const newProject = {
-      id: Math.random().toString(), // Unique ID for the project
+      id: Math.random().toString(),
       name: projectName,
       description,
       type: projectType,
-      startDate: startDate.toISOString(), // Convert to ISO string for consistency
-      endDate: endDate.toISOString(),     // Convert to ISO string for consistency
+      startDate: startDate.toISOString(),
+      endDate: endDate.toISOString(),
       location,
-      coverImage,
     };
 
     setProjects([...projects, newProject]);
@@ -165,17 +155,15 @@ const ProjectListing = () => {
     setStartDate(new Date());
     setEndDate(new Date());
     setLocation('');
-    setCoverImage(null);
   };
 
   const renderProject = ({ item }) => (
     <View style={styles.projectCard}>
-      {item.coverImage && <Image source={item.coverImage} style={styles.coverImage} />}
       <Text style={styles.projectTitle}>{item.name}</Text>
-      <Text style={styles.projectDetail}>Type: {item.type}</Text>
-      <Text style={styles.projectDetail}>Start Date: {new Date(item.startDate).toDateString()}</Text>
-      <Text style={styles.projectDetail}>End Date: {new Date(item.endDate).toDateString()}</Text>
-      <Text style={styles.projectDetail}>Location: {item.location}</Text>
+      <Text style={styles.projectDetail}><FontAwesome name="list-alt" size={16} color="#2B3467" /> Type: {item.type}</Text>
+      <Text style={styles.projectDetail}><FontAwesome name="calendar" size={16} color="#2B3467" /> Start Date: {new Date(item.startDate).toDateString()}</Text>
+      <Text style={styles.projectDetail}><FontAwesome name="calendar-check-o" size={16} color="#2B3467" /> End Date: {new Date(item.endDate).toDateString()}</Text>
+      <Text style={styles.projectDetail}><FontAwesome name="map-marker" size={16} color="#2B3467" /> Location: {item.location}</Text>
       <Text style={styles.projectDescription}>{item.description}</Text>
     </View>
   );
@@ -190,8 +178,6 @@ const ProjectListing = () => {
           ListHeaderComponent={() => (
             <ProjectForm
               onSubmit={handleSubmit}
-              coverImage={coverImage}
-              onImagePicker={handleImagePicker}
               projectName={projectName}
               setProjectName={setProjectName}
               description={description}
@@ -235,34 +221,27 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  input: {
-    height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F0F0',
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: height * 0.02,
-    backgroundColor: '#FFFFFF',
-  },
-  imagePicker: {
-    alignItems: 'center',
+    paddingVertical: 12,
     marginBottom: height * 0.02,
   },
-  coverImage: {
-    width: width * 0.9,
-    height: height * 0.3,
-    borderRadius: 10,
-    marginBottom: height * 0.01,
-  },
-  imagePickerText: {
-    marginTop: 5,
-    color: '#2B3467',
+  input: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#333',
   },
   submitButton: {
     backgroundColor: '#2B3467',
     padding: 15,
     borderRadius: 5,
     alignItems: 'center',
+    marginTop: height * 0.02,
   },
   submitButtonText: {
     color: '#FFFFFF',
@@ -291,6 +270,7 @@ const styles = StyleSheet.create({
   projectDetail: {
     fontSize: width * 0.04,
     color: '#666',
+    marginBottom: height * 0.005,
   },
   projectDescription: {
     fontSize: width * 0.04,

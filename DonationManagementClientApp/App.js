@@ -8,11 +8,12 @@ import Login_choice from './screens/Login_choice';
 import Orphanage_Signup from './screens/Orphanage_Signup';
 import Donor_Login from './screens/Donor_Login';
 import Orphanage_Login from './screens/Orphanage_Login';
+import MainNavigator from './Component/MainNavigator';
 import Orphanage_profile from './screens/Orphanage_profile';
 import Orphanage_Feed from './screens/Orphanage_Feed';
 import Donor_Profile from './screens/Donor_Profile';
+import Donor_Notifications from './screens/Donor_Notifications';
 import Add_Donation from './screens/Add_Donation';
-import Statistics_Screen from './screens/Statistics_Screen';
 import Project_Listing from './screens/Project_Listing';
 import Donor_Signup from './screens/Donor_Signup';
 import Project_Details from './screens/Project_Details';
@@ -46,7 +47,7 @@ export default function App() {
         <Stack.Screen name="Orphanage_Signup" component={Orphanage_Signup} />
         <Stack.Screen name="Donation" component={Donation} />
         <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="Statistics_Screen" component={Statistics_Screen} />
+        <Stack.Screen name="Donor_Notifications" component={Donor_Notifications} />
         <Stack.Screen name="Orphanage_Dashboard" component={Orphanage_Dashboard} />
         <Stack.Screen name="Orphanage_profile" component={Orphanage_profile} />
         <Stack.Screen name="Donor_dashboard" component={Donor_dashboard} />

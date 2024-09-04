@@ -49,27 +49,172 @@
 
 
 
-fabContainer: {
-  position: 'absolute',
-  bottom: 80,
-  right: 20,
+notificationIconContainer: {
+  position: 'relative',
 },
-fabMain: {
-  backgroundColor: '#201E43',
-  width: 60,
-  height: 60,
-  borderRadius: 30,
+notificationBadge: {
+  position: 'absolute',
+  top: -5,
+  right: -5,
+  backgroundColor: 'red',
+  borderRadius: 10,
+  width: 20,
+  height: 20,
   justifyContent: 'center',
   alignItems: 'center',
 },
-fabButton: {
-  position: 'absolute',
-  right: 0,
-  backgroundColor: '#134B70',
-  width: 50,
-  height: 50,
-  borderRadius: 25,
-  justifyContent: 'center',
-  alignItems: 'center',
+notificationBadgeText: {
+  color: 'white',
+  fontSize: 12,
+  fontWeight: 'bold',
 },
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingBottom: height * 0.01,
+  },
+  userCard: {
+    paddingVertical: height * 0.11,
+    paddingHorizontal: width * 0.06,
+    backgroundColor: '#201E43',
+    marginBottom: height * 0.01,
+    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: 15,
+    alignItems: 'center',
+  },
+  userName: {
+    fontSize: width * 0.07,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  userDate: {
+    fontSize: width * 0.04,
+    color: '#CCCCCC',
+  },
+  spacer: {
+    height: height * 0.02,
+  },
+  orphanageCards: {
+    marginBottom: height * 0.03,
+    paddingVertical: height * 0.00,
+    textAlign: 'center',
+  },
+  card: {
+    width: width * 0.8, // Adjusted to 80% of screen width
+    height: width * 0.6, // Adjusted height relative to width
+    marginHorizontal: width * 0.02,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  coverPhoto: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  cardFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    padding: width * 0.05,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    width: '100%',
+    borderBottomLeftRadius: 10,
+    borderTopRightRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardTitle: {
+    fontSize: width * 0.05,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  exploreButton: {
+    backgroundColor: '#201E43',
+    paddingVertical: height * 0.01,
+    paddingHorizontal: width * 0.04,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  exploreButtonText: {
+    color: '#FFFFFF',
+    fontSize: width * 0.04,
+    marginRight: width * 0.02,
+  },
+  donateButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: height * 0.02,
+    marginHorizontal: width * 0.2,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    marginBottom: height * 0.10,
+  },
+  donateButtonText: {
+    color: '#FFFFFF',
+    fontSize: width * 0.06,
+    marginLeft: width * 0.02,
+  },
+  sectionTitle: {
+    fontSize: width * 0.05,
+    fontWeight: 'bold',
+    marginBottom: height * 0.02,
+  },
+  historyCard: {
+    padding: width * 0.05,
+    marginBottom: height * 0.02,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 10,
+  },
+  historyDate: {
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+  },
+  historyAmount: {
+    fontSize: width * 0.04,
+    color: '#4CAF50',
+  },
+  historyCampaign: {
+    fontSize: width * 0.04,
+    color: '#666666',
+  },
+  campaignCard: {
+    padding: width * 0.05,
+    marginBottom: height * 0.02,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 10,
+  },
+  campaignName: {
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+  },
+  campaignStatus: {
+    fontSize: width * 0.04,
+    color: '#FF5722',
+  },
+  bottomNav: {
+    width: '100%',
+    flexDirection: 'row',
+    backgroundColor: '#201E43',
+    justifyContent: 'space-between',
+    paddingVertical: '3%',
+    paddingHorizontal: '4%',
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    position: 'absolute',
+    bottom: 0,
+  },
+  navButton: {
+    alignItems: 'center',
+  },
+  navButtonText: {
+    color: '#FFFFFF',
+    fontSize: width * 0.03,
+  },
 });

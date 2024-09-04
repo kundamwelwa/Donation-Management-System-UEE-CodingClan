@@ -8,11 +8,12 @@ import Orphanage_Login from "./Orphanage_Login";
 import Orphanage_profile from "./Orphanage_profile";
 import Orphanage_Dashboard from "./Orphanage_Dashboard";
 import Donor_dashboard from "./Donor_dashboard";
+import Donor_Notifications from "./Donor_Notifications";
 import Donation from "./Add_Donation";
 import Donor_Profile from "./Donor_Profile";
+import MainNavigator from "../Component/MainNavigator";
 import Orphanage_Signup from "./Orphanage_Signup";
 import Orphanage_Feed from "./Orphanage_Feed";
-import Statistics_Screen from "./Statistics_Screen";
 import Add_Donation from "./Add_Donation";
 import AddCard from "./AddCard";
 import Project_Details from "./Project_Details";
@@ -35,8 +36,9 @@ export {
     Donor_Profile,
     Add_Donation,
     Donation,
+    Donor_Notifications,
+    MainNavigator,
     Project_Listing, 
-    Statistics_Screen,
     Project_Details,
     Orphanage_Signup,
     Orphanage_Feed,
