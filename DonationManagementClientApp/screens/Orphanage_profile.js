@@ -3,6 +3,7 @@ import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView
 import { Card } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker'; // Importing ImagePicker for uploading images
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import StatusBarManager from '../Component/StatusBarManager';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';

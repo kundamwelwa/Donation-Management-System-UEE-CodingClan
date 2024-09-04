@@ -1,4 +1,5 @@
 import React from "react";
+import StatusBarManager from '../Component/StatusBarManager';
 import { Text, TouchableOpacity, StyleSheet, View } from "react-native";
 
 const LoginChoice = (props) => {

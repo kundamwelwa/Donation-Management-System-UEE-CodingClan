@@ -32,6 +32,8 @@ const Orphanage_Feed = ({ route, navigation }) => {
   const { orphanageId } = route.params;
   const [orphanageDetails, setOrphanageDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredProjects, setFilteredProjects] = useState(projects);
 
   useEffect(() => {
     const getOrphanageDetails = async () => {
@@ -47,6 +49,15 @@ const Orphanage_Feed = ({ route, navigation }) => {
     
     getOrphanageDetails();
   }, [orphanageId]);
+
+  useEffect(() => {
+    // Filter projects based on search term
+    const searchFilter = projects.filter(project => 
+      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredProjects(searchFilter);
+  }, [searchTerm]);
 
   const renderProjectCard = ({ item }) => (
     <Card style={styles.projectCard}>
@@ -95,6 +106,8 @@ const Orphanage_Feed = ({ route, navigation }) => {
             style={styles.searchInput}
             placeholder="Search projects..."
             placeholderTextColor="#888888"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
           />
           <TouchableOpacity style={styles.searchIcon}>
             <MaterialCommunityIcons name="magnify" size={24} color="#201E43" />
@@ -104,7 +117,7 @@ const Orphanage_Feed = ({ route, navigation }) => {
 
       <ScrollView contentContainerStyle={styles.scrollView}>
         <FlatList
-          data={projects}
+          data={filteredProjects}
           renderItem={renderProjectCard}
           keyExtractor={(item) => item.id}
         />
@@ -233,22 +246,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: width * 0.04,
     marginRight: width * 0.02,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: height * 0.02,
-    backgroundColor: '#201E43',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
-    paddingHorizontal: width * 0.04,
-  },
-  navButton: {
-    alignItems: 'center',
-  },
-  navButtonText: {
-    color: '#FFFFFF',
-    fontSize: width * 0.04,
   },
   loadingContainer: {
     flex: 1,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
+import StatusBarManager from '../Component/StatusBarManager';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 

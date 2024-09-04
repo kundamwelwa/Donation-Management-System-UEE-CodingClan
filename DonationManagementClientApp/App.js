@@ -12,6 +12,8 @@ import Orphanage_profile from './screens/Orphanage_profile';
 import Orphanage_Feed from './screens/Orphanage_Feed';
 import Donor_Profile from './screens/Donor_Profile';
 import Add_Donation from './screens/Add_Donation';
+import Statistics_Screen from './screens/Statistics_Screen';
+import Project_Listing from './screens/Project_Listing';
 import Donor_Signup from './screens/Donor_Signup';
 import Project_Details from './screens/Project_Details';
 import Splash from './screens/Splash';
@@ -19,7 +21,6 @@ import AddCard from './screens/AddCard';
 import Projects from './screens/Projects';
 import MyProjects from './screens/MyProjects';
 import ViewProject from './screens/ViewProject';
-import AddProject from './screens/AddProject';
 import EditProject from './screens/EditProject';
 import EventDashboard from './screens/EventDashboard';
 import CompleteEvent from './screens/CompleteEvent';
@@ -45,9 +46,11 @@ export default function App() {
         <Stack.Screen name="Orphanage_Signup" component={Orphanage_Signup} />
         <Stack.Screen name="Donation" component={Donation} />
         <Stack.Screen name="Register" component={Register} />
+        <Stack.Screen name="Statistics_Screen" component={Statistics_Screen} />
         <Stack.Screen name="Orphanage_Dashboard" component={Orphanage_Dashboard} />
         <Stack.Screen name="Orphanage_profile" component={Orphanage_profile} />
         <Stack.Screen name="Donor_dashboard" component={Donor_dashboard} />
+        <Stack.Screen name="Project_Listing" component={Project_Listing} />
         <Stack.Screen name="Orphanage_Feed" component={Orphanage_Feed} />
         <Stack.Screen name="Donor_Profile" component={Donor_Profile} />
         <Stack.Screen name="Add_Donation" component={Add_Donation} />
@@ -56,7 +59,6 @@ export default function App() {
         <Stack.Screen name="Projects" component={Projects} />
         <Stack.Screen name="MyProjects" component={MyProjects} />
         <Stack.Screen name="ViewProject" component={ViewProject} />
-        <Stack.Screen name="AddProject" component={AddProject} />
         <Stack.Screen name="EditProject" component={EditProject} />
         <Stack.Screen name="EventDashboard" component={EventDashboard} />
         <Stack.Screen name="CompleteEvent" component={CompleteEvent} />

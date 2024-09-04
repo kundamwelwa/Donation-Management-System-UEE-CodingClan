@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, FlatList, Dimensions } from 'react-native';
 import { Picker } from '@react-native-picker/picker'; // Updated import
 import { FontAwesome } from '@expo/vector-icons'; // Import FontAwesome icons
+import StatusBarManager from '../Component/StatusBarManager';
 
 const { width, height } = Dimensions.get('window');
 

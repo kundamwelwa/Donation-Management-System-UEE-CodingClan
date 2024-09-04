@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, ScrollView, LayoutAnimation } from 'react-native';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
+import StatusBarManager from '../Component/StatusBarManager';
 
 const { width, height } = Dimensions.get('window');
 

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import StatusBarManager from '../Component/StatusBarManager';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Formik } from 'formik';

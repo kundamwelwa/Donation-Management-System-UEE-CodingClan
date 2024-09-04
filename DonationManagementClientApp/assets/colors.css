@@ -4,23 +4,72 @@
 /*{Cards = #201E43}*/
 
 
+
+
+
+
+    {/* Floating Action Button */}
+    <View style={styles.fabContainer}>
+    <TouchableOpacity onPress={() => console.log('Add a Campaign')} style={[styles.fabButton, fabButtonStyle(1)]}>
+      <FontAwesome name="bullhorn" size={24} color="white" />
+    </TouchableOpacity>
+    <TouchableOpacity onPress={() => console.log('List a Project')} style={[styles.fabButton, fabButtonStyle(2)]}>
+      <FontAwesome name="tasks" size={24} color="white" />
+    </TouchableOpacity>
+    {/* Add more buttons if necessary */}
+    <TouchableOpacity onPress={toggleFab} style={styles.fabMain}>
+      <FontAwesome name={isFabOpen ? 'times' : 'plus'} size={24} color="white" />
+    </TouchableOpacity>
+  </View>
+</View>
+);
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+fabContainer: {
+  position: 'absolute',
+  bottom: 80,
+  right: 20,
 },
-filterButton: {
-  marginLeft: width * 0.02,
-  backgroundColor: '#0033A0',
-  padding: width * 0.02,
-  borderRadius: 5,
-  alignItems: 'center',
+fabMain: {
+  backgroundColor: '#201E43',
+  width: 60,
+  height: 60,
+  borderRadius: 30,
   justifyContent: 'center',
+  alignItems: 'center',
 },
-filtersContainer: {
-  marginBottom: height * 0.02,
+fabButton: {
+  position: 'absolute',
+  right: 0,
+  backgroundColor: '#134B70',
+  width: 50,
+  height: 50,
+  borderRadius: 25,
+  justifyContent: 'center',
+  alignItems: 'center',
 },
-filterLabel: {
-  fontSize: width * 0.05,
-  fontWeight: 'bold',
-  marginBottom: height * 0.01,
-},
-picker: {
-  height: height * 0.05,
-  marginBottom: height * 0.01,
+});

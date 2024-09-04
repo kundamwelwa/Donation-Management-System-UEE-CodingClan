@@ -12,6 +12,7 @@ import Donation from "./Add_Donation";
 import Donor_Profile from "./Donor_Profile";
 import Orphanage_Signup from "./Orphanage_Signup";
 import Orphanage_Feed from "./Orphanage_Feed";
+import Statistics_Screen from "./Statistics_Screen";
 import Add_Donation from "./Add_Donation";
 import AddCard from "./AddCard";
 import Project_Details from "./Project_Details";
@@ -19,7 +20,8 @@ import MyDonations from "./MyDonations";
 import EventDashboard from "./EventDashboard";
 import CompleteEvent from "./CompleteEvent";
 import Event from "./Event";
-import AddDonation from "./Add_Donation";  // Make sure this is imported correctly
+import AddDonation from "./Add_Donation";
+import Project_Listing from "./Project_Listing";  // Make sure this is imported correctly
 
 export {
     Home,
@@ -33,6 +35,8 @@ export {
     Donor_Profile,
     Add_Donation,
     Donation,
+    Project_Listing, 
+    Statistics_Screen,
     Project_Details,
     Orphanage_Signup,
     Orphanage_Feed,
