@@ -1,38 +1,62 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, LayoutAnimation } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, LayoutAnimation, StatusBar, ActivityIndicator } from 'react-native';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
+import axios from 'axios';
+import { Config } from 'react-native-config'; // Import as named import
 
 const { width, height } = Dimensions.get('window');
-
-// Sample data
-const donationHistory = [
-  { id: '1', date: '2024-08-15', amount: '$100', campaign: 'Feed the Children' },
-  { id: '2', date: '2024-07-22', amount: '$50', campaign: 'Clothing Drive' },
-];
-
-const ongoingCampaigns = [
-  { id: '1', name: 'Feed the Children', status: 'Active' },
-  { id: '2', name: 'Clothing Drive', status: 'Completed' },
-];
-
-const orphanageCards = [
-  { id: '1', name: 'Orphanage 1', description: 'Helping underprivileged children.', coverPhoto: require('../assets/Images/Orphanage1.jpg') },
-  { id: '2', name: 'Orphanage 2', description: 'Providing food and shelter.', coverPhoto: require('../assets/Images/Orphanage2.jpg') },
-  { id: '3', name: 'Orphanage 3', description: 'Supporting education.', coverPhoto: require('../assets/Images/Orphanage3.jpg') },
-  { id: '4', name: 'Orphanage 4', description: 'Offering medical aid.', coverPhoto: require('../assets/Images/Orphanage4.jpg') },
-];
 
 const Donor_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home');
   const [notificationCount, setNotificationCount] = useState(5); // Replace with dynamic data
   const [currentDate, setCurrentDate] = useState('');
+  const [userName, setUserName] = useState('');
+  const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
+  const [orphanageCards, setOrphanageCards] = useState([]);
+  const [donationHistory, setDonationHistory] = useState([]);
+  const [ongoingCampaigns, setOngoingCampaigns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Update current date
-    const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
-    setCurrentDate(date);
+    const fetchData = async () => {
+      try {
+        const token = await getToken(); // Function to get token from your secure storage
+        const headers = { 'Authorization': `Bearer ${token}` };
+
+        const userResponse = await axios.get(`${Config.API_URL}/api/user`, { headers });
+        setUserName(userResponse.data.name);
+
+        const orphanagesResponse = await axios.get(`${Config.API_URL}/api/orphanages`, { headers });
+        setOrphanageCards(orphanagesResponse.data);
+
+        const donationsResponse = await axios.get(`${Config.API_URL}/api/donations`, { headers });
+        setDonationHistory(donationsResponse.data);
+
+        const campaignsResponse = await axios.get(`${Config.API_URL}/api/campaigns`, { headers });
+        setOngoingCampaigns(campaignsResponse.data);
+
+        const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+        setCurrentDate(date);
+      } catch (error) {
+        setError('Error fetching data. Please try again later.');
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
+
+  useEffect(() => {
+    StatusBar.setBackgroundColor(backgroundColor);
+  }, [backgroundColor]);
+
+  const getToken = async () => {
+    return 'Y048e0fbf2ca51a2e24adb847077ef0871b795a1bc1bbbbd7ce4008b2a182921a6472590fa8be1ee7e5e0947d9b6fa836a07edec7d36fb83df9d8f7a426810bcf'; 
+  };
 
   const changeSection = (section) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -42,7 +66,7 @@ const Donor_Dashboard = ({ navigation }) => {
   const renderOrphanageCard = ({ item }) => (
     <Card key={item.id} style={styles.card}>
       <View style={styles.coverPhotoContainer}>
-        <Image source={item.coverPhoto} style={styles.coverPhoto} />
+        <Image source={{ uri: item.coverPhoto }} style={styles.coverPhoto} />
       </View>
       <View style={styles.cardFooter}>
         <Text style={styles.cardTitle}>{item.name}</Text>
@@ -76,14 +100,23 @@ const Donor_Dashboard = ({ navigation }) => {
     switch (activeSection) {
       case 'home':
         return (
-          <FlatList
-            data={orphanageCards}
-            renderItem={renderOrphanageCard}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.orphanageCards}
-          />
+          <View>
+            {orphanageCards.length > 0 ? (
+              <FlatList
+                data={orphanageCards}
+                renderItem={renderOrphanageCard}
+                keyExtractor={item => item.id.toString()}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.orphanageCards}
+              />
+            ) : (
+              <View style={styles.noOrphanagesContainer}>
+                <Text style={styles.noOrphanagesText}>You don’t have any Orphanages yet</Text>
+                <Text style={styles.searchInstruction}>Search for orphanages by hitting the Donate button</Text>
+              </View>
+            )}
+          </View>
         );
       case 'donationHistory':
         return (
@@ -91,13 +124,13 @@ const Donor_Dashboard = ({ navigation }) => {
             <FlatList
               data={donationHistory}
               renderItem={renderDonationHistory}
-              keyExtractor={item => item.id}
+              keyExtractor={item => item.id.toString()}
               style={styles.historyList}
             />
             <FlatList
               data={ongoingCampaigns}
               renderItem={renderCampaign}
-              keyExtractor={item => item.id}
+              keyExtractor={item => item.id.toString()}
               style={styles.campaignList}
             />
           </>
@@ -107,10 +140,20 @@ const Donor_Dashboard = ({ navigation }) => {
     }
   };
 
+  if (loading) {
+    return <View style={styles.loader}><ActivityIndicator size="large" color="#0000ff" /></View>;
+  }
+
+  if (error) {
+    return <View style={styles.loader}><Text>{error}</Text></View>;
+  }
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor }]}>
+      <StatusBar backgroundColor="#201E43" barStyle="light-content" />
+
       <View style={styles.userCard}>
-        <Text style={styles.userName}>Welcome, Kelly!</Text>
+        <Text style={styles.userName}>Welcome, {userName}!</Text>
         <Text style={styles.userDate}>{currentDate}</Text>
       </View>
 
@@ -121,7 +164,7 @@ const Donor_Dashboard = ({ navigation }) => {
           <FlatList
             data={orphanageCards}
             renderItem={renderOrphanageCard}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item.id.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.orphanageCards}
@@ -216,36 +259,35 @@ const styles = StyleSheet.create({
     height: '100%',
     resizeMode: 'cover',
   },
+  coverPhotoContainer: {
+    height: '60%',
+    overflow: 'hidden',
+  },
   cardFooter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    padding: width * 0.05,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    paddingVertical: width * 0.03,
+    paddingHorizontal: width * 0.02,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
     width: '100%',
-    borderBottomLeftRadius: 10,
+    borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
   },
   cardTitle: {
     fontSize: width * 0.05,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#201E43',
   },
   exploreButton: {
-    backgroundColor: '#201E43',
-    paddingVertical: height * 0.01,
-    paddingHorizontal: width * 0.04,
-    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    padding: width * 0.02,
+    backgroundColor: '#201E43',
+    borderRadius: 5,
   },
   exploreButtonText: {
-    color: '#FFFFFF',
     fontSize: width * 0.04,
-    marginRight: width * 0.02,
+    color: 'white',
+    marginRight: width * 0.01,
   },
   donateButton: {
     backgroundColor: '#4CAF50',
@@ -261,43 +303,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: width * 0.06,
     marginLeft: width * 0.02,
-  },
-  sectionTitle: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    marginBottom: height * 0.02,
-  },
-  historyCard: {
-    padding: width * 0.05,
-    marginBottom: height * 0.02,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 10,
-  },
-  historyDate: {
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
-  },
-  historyAmount: {
-    fontSize: width * 0.04,
-    color: '#4CAF50',
-  },
-  historyCampaign: {
-    fontSize: width * 0.04,
-    color: '#666666',
-  },
-  campaignCard: {
-    padding: width * 0.05,
-    marginBottom: height * 0.02,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 10,
-  },
-  campaignName: {
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
-  },
-  campaignStatus: {
-    fontSize: width * 0.04,
-    color: '#FF5722',
   },
   bottomNav: {
     width: '100%',
@@ -315,17 +320,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   navButtonText: {
-    color: '#FFFFFF',
     fontSize: width * 0.03,
+    color: 'white',
+    marginTop: height * 0.01,
   },
-
   notificationIconContainer: {
     position: 'relative',
+    alignItems: 'center',
   },
   notificationBadge: {
     position: 'absolute',
-    top: -5,
-    right: -5,
+    top: 0,
+    right: 0,
     backgroundColor: 'red',
     borderRadius: 10,
     width: 20,
@@ -334,11 +340,74 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   notificationBadgeText: {
-    color: 'white',
     fontSize: 12,
-    fontWeight: 'bold',
+    color: 'white',
   },
-  
+  noOrphanagesContainer: {
+    alignItems: 'center',
+    marginTop: height * 0.1,
+  },
+  noOrphanagesText: {
+    fontSize: width * 0.04,
+    color: '#201E43',
+    textAlign: 'center',
+  },
+  searchInstruction: {
+    fontSize: width * 0.03,
+    color: '#201E43',
+    textAlign: 'center',
+    marginTop: height * 0.02,
+  },
+  historyList: {
+    marginBottom: height * 0.03,
+  },
+  historyCard: {
+    padding: width * 0.05,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    marginBottom: height * 0.02,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  historyDate: {
+    fontSize: width * 0.04,
+    color: '#201E43',
+  },
+  historyAmount: {
+    fontSize: width * 0.05,
+    fontWeight: 'bold',
+    color: '#201E43',
+  },
+  historyCampaign: {
+    fontSize: width * 0.04,
+    color: '#CCCCCC',
+  },
+  campaignList: {
+    marginBottom: height * 0.03,
+  },
+  campaignCard: {
+    padding: width * 0.05,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    marginBottom: height * 0.02,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  campaignName: {
+    fontSize: width * 0.05,
+    fontWeight: 'bold',
+    color: '#201E43',
+  },
+  campaignStatus: {
+    fontSize: width * 0.04,
+    color: '#CCCCCC',
+  },
 });
 
 export default Donor_Dashboard;

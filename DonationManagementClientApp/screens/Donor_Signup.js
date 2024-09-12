@@ -1,317 +1,352 @@
 import React, { useState } from 'react';
-import StatusBarManager from '../Component/StatusBarManager';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, StatusBar, Dimensions } from 'react-native';
 import RNPickerSelect from 'react-native-picker-select';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons'; // For showing password icons
+import { AntDesign, MaterialIcons, Feather } from '@expo/vector-icons'; // For input icons
+import { Config } from 'react-native-config'; // Import as default import
 
-// Updated validation schema
-const SignUpSchema = Yup.object().shape({
-  userType: Yup.string().required(),
-  fullName: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'single') {
-      return Yup.string().required('Full name is required');
-    }
-    return Yup.string().notRequired();
-  }),
-  orgName: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'organization') {
-      return Yup.string().required('Organization name is required');
-    }
-    return Yup.string().notRequired();
-  }),
-  orgRegNumber: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'organization') {
-      return Yup.string().required('Organization registration number is required');
-    }
-    return Yup.string().notRequired();
-  }),
-  orgType: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'organization') {
-      return Yup.string().required('Organization type is required');
-    }
-    return Yup.string().notRequired();
-  }),
-  website: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'organization') {
-      return Yup.string().url('Invalid URL').notRequired();
-    }
-    return Yup.string().notRequired();
-  }),
-  contactName: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'organization') {
-      return Yup.string().required('Contact person name is required');
-    }
-    return Yup.string().notRequired();
-  }),
-  contactPosition: Yup.lazy((value, { parent }) => {
-    if (parent.userType === 'organization') {
-      return Yup.string().required('Contact position is required');
-    }
-    return Yup.string().notRequired();
-  }),
+const { width, height } = Dimensions.get('window'); // Get screen dimensions
+
+// Simplified validation schema
+const SignUpSchema = Yup.object({
+  userType: Yup.string().required('User type is required'),
+  fullName: Yup.string(),
+  orgName: Yup.string(),
+  orgRegNumber: Yup.string(),
+  orgType: Yup.string(),
   email: Yup.string().email('Invalid email').required('Email is required'),
   physicalAddress: Yup.string().required('Physical address is required'),
   contactDetails: Yup.string().required('Contact details are required'),
+  password: Yup.string().min(6, 'Password must be at least 6 characters long').required('Password is required'),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref('password'), null], 'Passwords must match')
+    .required('Confirm password is required'),
 });
 
 const Donor_Signup = ({ navigation }) => {
   const [userType, setUserType] = useState('single');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSignUp = async (values) => {
+  setIsSubmitting(true); // Show loading spinner
+  try {
+    const response = await axios.post(`${Config.API_URL}/auth/signup`, values);
+    console.log('Response:', response.data); // Log response data
+
+    // Check for user already registered
+    if (response.data.message === 'User already registered') {
+      Alert.alert(
+        '⚠️ User Exists',
+        'This email is already registered. Please log in.',
+        [
+          {
+            text: 'OK',
+            onPress: () => setIsSubmitting(false),
+          },
+        ],
+        { cancelable: false }
+      );
+    } else {
+      // Show success notification with badge
+      Alert.alert('🎉 Success', 'Registration completed!', [
+        {
+          text: 'OK',
+          onPress: () => {
+            setIsSubmitting(false);
+            navigation.navigate('Donor_Login');
+          },
+        },
+      ]);
+    }
+  } catch (error) {
+    console.error('Sign Up Error:', error.response ? error.response.data : error.message); // Log error details
+    setIsSubmitting(false);
+    Alert.alert('Error', 'Failed to sign up. Please try again later.');
+  }
+};
+
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Donor Sign-Up</Text>
-      <Formik
-        initialValues={{
-          fullName: '',
-          orgName: '',
-          orgRegNumber: '',
-          orgType: '',
-          website: '',
-          contactName: '',
-          contactPosition: '',
-          email: '',
-          physicalAddress: '',
-          contactDetails: '',
-          userType: 'single',
-        }}
-        validationSchema={SignUpSchema}
-        onSubmit={(values) => {
-          // Handle sign-up here
-          console.log(values);
-          navigation.navigate('Donor_dashboard');
-        }}
-      >
-        {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
-          <View style={styles.form}>
-            <Text style={styles.label}>SignUp as:</Text>
-            <RNPickerSelect
-              onValueChange={(value) => {
-                setUserType(value);
-                setFieldValue('userType', value);
-              }}
-              items={[
-                { label: 'Personal Account', value: 'single' },
-                { label: 'Organization Account', value: 'organization' },
-              ]}
-              style={pickerSelectStyles}
-              value={userType}
-            />
+    <>
+      <StatusBar backgroundColor="#f9f9f9" barStyle="dark-content" />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Create An Account</Text>
+        <Formik
+          initialValues={{
+            fullName: '',
+            orgName: '',
+            orgRegNumber: '',
+            orgType: '',
+            email: '',
+            physicalAddress: '',
+            contactDetails: '',
+            password: '',
+            confirmPassword: '',
+            userType: 'single',
+          }}
+          validationSchema={SignUpSchema}
+          onSubmit={handleSignUp}
+        >
+          {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
+            <View style={styles.form}>
+              <Text style={styles.label}>Sign Up as:</Text>
+              <RNPickerSelect
+                onValueChange={(value) => {
+                  setUserType(value);
+                  setFieldValue('userType', value);
+                }}
+                items={[
+                  { label: 'Personal Account', value: 'single' },
+                  { label: 'Organization Account', value: 'organization' },
+                ]}
+                style={pickerSelectStyles}
+                value={userType}
+              />
 
-            {userType === 'organization' && (
-              <>
+              {/* Organization Fields */}
+              {userType === 'organization' && (
+                <>
+                  <View style={styles.inputContainer}>
+                    <MaterialIcons name="business" size={24} color='#434242' />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Organization Name"
+                      onChangeText={handleChange('orgName')}
+                      onBlur={handleBlur('orgName')}
+                      value={values.orgName}
+                    />
+                  </View>
+                  {errors.orgName && touched.orgName && <Text style={styles.errorText}>{errors.orgName}</Text>}
+                  
+                  <View style={styles.inputContainer}>
+                    <Feather name="file-text" size={24} color='#434242' />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Registration Number"
+                      onChangeText={handleChange('orgRegNumber')}
+                      onBlur={handleBlur('orgRegNumber')}
+                      value={values.orgRegNumber}
+                    />
+                  </View>
+                  {errors.orgRegNumber && touched.orgRegNumber && <Text style={styles.errorText}>{errors.orgRegNumber}</Text>}
+                  
+                  <View style={styles.inputContainer}>
+                    <MaterialIcons name="category" size={24} color='#434242' />
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Organization Type"
+                      onChangeText={handleChange('orgType')}
+                      onBlur={handleBlur('orgType')}
+                      value={values.orgType}
+                    />
+                  </View>
+                  {errors.orgType && touched.orgType && <Text style={styles.errorText}>{errors.orgType}</Text>}
+                </>
+              )}
+
+              {/* Full Name for Single User */}
+              {userType === 'single' && (
+                <View style={styles.inputContainer}>
+                  <AntDesign name="user" size={24} color='#434242' />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Full Name"
+                    onChangeText={handleChange('fullName')}
+                    onBlur={handleBlur('fullName')}
+                    value={values.fullName}
+                  />
+                </View>
+              )}
+              {errors.fullName && touched.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+
+              {/* Email Field */}
+              <View style={styles.inputContainer}>
+                <MaterialIcons name="email" size={24} color='#434242' />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Organization Name"
-                  onChangeText={handleChange('orgName')}
-                  onBlur={handleBlur('orgName')}
-                  value={values.orgName}
+                  placeholder="Email Address"
+                  keyboardType="email-address"
+                  onChangeText={handleChange('email')}
+                  onBlur={handleBlur('email')}
+                  value={values.email}
                 />
-                {errors.orgName && touched.orgName ? (
-                  <Text style={styles.errorText}>{errors.orgName}</Text>
-                ) : null}
+              </View>
+              {errors.email && touched.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
+              {/* Address Field */}
+              <View style={styles.inputContainer}>
+                <Feather name="map-pin" size={24} color='#434242' />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Organization Registration Number"
-                  onChangeText={handleChange('orgRegNumber')}
-                  onBlur={handleBlur('orgRegNumber')}
-                  value={values.orgRegNumber}
+                  placeholder="Physical Address"
+                  onChangeText={handleChange('physicalAddress')}
+                  onBlur={handleBlur('physicalAddress')}
+                  value={values.physicalAddress}
                 />
-                {errors.orgRegNumber && touched.orgRegNumber ? (
-                  <Text style={styles.errorText}>{errors.orgRegNumber}</Text>
-                ) : null}
+              </View>
+              {errors.physicalAddress && touched.physicalAddress && <Text style={styles.errorText}>{errors.physicalAddress}</Text>}
 
-                <RNPickerSelect
-                  onValueChange={handleChange('orgType')}
-                  items={[
-                    { label: 'Non-Profit', value: 'non-profit' },
-                    { label: 'Private', value: 'private' },
-                    { label: 'Government', value: 'government' },
-                  ]}
-                  style={pickerSelectStyles}
-                  value={values.orgType}
-                  placeholder={{ label: 'Select Organization Type', value: null }}
-                />
-                {errors.orgType && touched.orgType ? (
-                  <Text style={styles.errorText}>{errors.orgType}</Text>
-                ) : null}
-
+              {/* Contact Details */}
+              <View style={styles.inputContainer}>
+                <Feather name="phone" size={24} color='#434242' />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Website URL (optional)"
-                  onChangeText={handleChange('website')}
-                  onBlur={handleBlur('website')}
-                  value={values.website}
+                  placeholder="Contact Details"
+                  onChangeText={handleChange('contactDetails')}
+                  onBlur={handleBlur('contactDetails')}
+                  value={values.contactDetails}
+                  keyboardType="numeric"  // Restricts the keyboard to only numbers
                 />
-                {errors.website && touched.website ? (
-                  <Text style={styles.errorText}>{errors.website}</Text>
-                ) : null}
+              </View>
 
+              {/* Password Field */}
+              <View style={styles.inputContainer}>
+                <Feather name="lock" size={24} color='#434242' />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Point of Contact Name"
-                  onChangeText={handleChange('contactName')}
-                  onBlur={handleBlur('contactName')}
-                  value={values.contactName}
+                  placeholder="Password"
+                  secureTextEntry={!showPassword}
+                  onChangeText={handleChange('password')}
+                  onBlur={handleBlur('password')}
+                  value={values.password}
                 />
-                {errors.contactName && touched.contactName ? (
-                  <Text style={styles.errorText}>{errors.contactName}</Text>
-                ) : null}
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                  <Ionicons name={showPassword ? 'eye' : 'eye-off'} size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              {errors.password && touched.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
+              {/* Confirm Password Field */}
+              <View style={styles.inputContainer}>
+                <Feather name="lock" size={24} color='#434242' />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Position in Organization"
-                  onChangeText={handleChange('contactPosition')}
-                  onBlur={handleBlur('contactPosition')}
-                  value={values.contactPosition}
+                  placeholder="Confirm Password"
+                  secureTextEntry={!showConfirmPassword}
+                  onChangeText={handleChange('confirmPassword')}
+                  onBlur={handleBlur('confirmPassword')}
+                  value={values.confirmPassword}
                 />
-                {errors.contactPosition && touched.contactPosition ? (
-                  <Text style={styles.errorText}>{errors.contactPosition}</Text>
-                ) : null}
-              </>
-            )}
+                <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                  <Ionicons name={showConfirmPassword ? 'eye' : 'eye-off'} size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+              {errors.confirmPassword && touched.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
 
-            {userType === 'single' && (
-              <>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Your Full Name"
-                  onChangeText={handleChange('fullName')}
-                  onBlur={handleBlur('fullName')}
-                  value={values.fullName}
-                />
-                {errors.fullName && touched.fullName ? (
-                  <Text style={styles.errorText}>{errors.fullName}</Text>
-                ) : null}
-              </>
-            )}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email Address"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              onChangeText={handleChange('email')}
-              onBlur={handleBlur('email')}
-              value={values.email}
-            />
-            {errors.email && touched.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            ) : null}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Physical Address"
-              onChangeText={handleChange('physicalAddress')}
-              onBlur={handleBlur('physicalAddress')}
-              value={values.physicalAddress}
-            />
-            {errors.physicalAddress && touched.physicalAddress ? (
-              <Text style={styles.errorText}>{errors.physicalAddress}</Text>
-            ) : null}
-
-            <TextInput
-              style={styles.input}
-              placeholder="Contact Details"
-              keyboardType="phone-pad"
-              onChangeText={handleChange('contactDetails')}
-              onBlur={handleBlur('contactDetails')}
-              value={values.contactDetails}
-            />
-            {errors.contactDetails && touched.contactDetails ? (
-              <Text style={styles.errorText}>{errors.contactDetails}</Text>
-            ) : null}
-
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </Formik>
-    </ScrollView>
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.submitButton, isSubmitting && styles.disabledButton]}
+                onPress={handleSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.submitButtonText}>Sign Up</Text>}
+              </TouchableOpacity>
+            </View>
+          )}
+        </Formik>
+      </ScrollView>
+    </>
   );
 };
 
-// Updated styles with a more modern look
+// Styles
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 20,
-    backgroundColor: '#f5f5f5',
-    paddingBottom: 40, // To give space when scrolling
+    padding: width * 0.05,  // Adjusts padding based on screen width
+    backgroundColor: '#fff',
   },
   title: {
-    marginTop:30,
-    fontSize: 40,
+    fontSize: width * 0.09,  // Responsive font size
     fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 50,
     textAlign: 'center',
-    marginBottom: 20,
-    color: '#0056A0', // Stylish blue color
+    marginVertical: height * 0.02,  // Margin based on screen height
+  },
+  form: {
+    marginTop: height * 0.02,
   },
   label: {
-    paddingTop: 10,
+    fontSize: width * 0.05,
+    fontWeight: '600',
     fontWeight: 'bold',
-    fontSize: 20,
-    marginBottom: 10,
     color: '#333',
+    marginBottom: 5,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f1f1',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: height * 0.02,  // Responsive margin
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#fff',
-    fontSize: 16,
+    flex: 1,
+    marginLeft: 10,
+    fontSize: width * 0.04,  // Responsive font size
   },
-  button: {
-    backgroundColor: '#0056A0', // Stylish blue color
-    padding: 15,
-    borderRadius: 10,
+  passwordContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 10,
+    backgroundColor: '#f1f1f1',
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: height * 0.02,
   },
-  buttonText: {
+
+  eyeIcon: {
+    padding: 10,
+    color: '#434242',
+  },
+  submitButton: {
+    backgroundColor: '#102C57',
+    paddingVertical: height * 0.02,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    fontSize: width * 0.06,  // Responsive button text
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 18,
   },
   errorText: {
     color: 'red',
-    fontSize: 12,
-    marginBottom: 10,
+    fontSize: width * 0.03,  // Responsive error font size
+    marginBottom: height * 0.02,
   },
 });
 
-const pickerSelectStyles = StyleSheet.create({
+// Custom picker style for RNPickerSelect
+const pickerSelectStyles = {
   inputIOS: {
-    fontSize: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    fontSize: width * 0.04,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 50,
-    color: '#333',
-    paddingRight: 30,
-    marginBottom: 10,
-    backgroundColor: '#0056A0', // Blue background
-    color: '#fff', // White text color
+    borderColor: 'gray',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30, // To ensure the text is not cut off
+    marginBottom: 20,
   },
   inputAndroid: {
-    fontSize: 20,
-    paddingHorizontal: 5,
+    fontSize: width * 0.04,
     paddingVertical: 8,
-    borderWidth: 0.5,
-    borderColor: '#ddd',
-    borderRadius: 50,
-    color: '#333',
-    paddingRight: 40,
-    marginBottom: 10,
-    backgroundColor: '#0056A0', // Blue background
-    color: '#fff', // White text color
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30, // To ensure the text is not cut off
+    marginBottom: 20,
   },
-});
+};
 
 export default Donor_Signup;
