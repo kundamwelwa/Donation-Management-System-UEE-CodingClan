@@ -1,36 +1,57 @@
-import React from 'react';
-import { StatusBar, View, StyleSheet } from 'react-native';
-import { getStatusBarHeight } from 'react-native-status-bar-height';
+import React from "react";
+import StatusBarManager from '../Component/StatusBarManager'; // Custom StatusBar component
+import { Text, TouchableOpacity, StyleSheet, View, StatusBar } from "react-native";
 
-const StatusBarManager = ({ backgroundColor, children }) => {
-  const statusBarStyle = isLightColor(backgroundColor) ? 'dark-content' : 'light-content';
+const LoginChoice = (props) => {
+
+  const navigateToLogin = (role) => {
+    if (role === 'Donor') {
+      props.navigation.navigate('Donor_Login'); // Navigate to Donor_Login screen
+    } else if (role === 'Orphanage') {
+      props.navigation.navigate('Orphanage_Login'); // Assuming you have an OrphanageLogin screen
+    }
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={styles.container}>
+      {/* Using the StatusBar */}
       <StatusBar
-        barStyle={statusBarStyle}
-        backgroundColor={backgroundColor}
+        barStyle="light-content" // or "dark-content" depending on your background
+        backgroundColor="#201E43" // Background color to match the design
       />
-      {children}
+
+      <TouchableOpacity style={styles.button} onPress={() => navigateToLogin('Donor')}>
+        <Text style={styles.buttonText}>Login as a Donor</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={() => navigateToLogin('Orphanage')}>
+        <Text style={styles.buttonText}>Login as an Orphanage</Text>
+      </TouchableOpacity>
     </View>
   );
-};
-
-// Utility function to determine if a color is light or dark
-const isLightColor = (color) => {
-  const hex = color.replace('#', '');
-  const c_r = parseInt(hex.substr(0, 2), 16);
-  const c_g = parseInt(hex.substr(2, 2), 16);
-  const c_b = parseInt(hex.substr(4, 2), 16);
-  const brightness = (c_r * 299 + c_g * 587 + c_b * 114) / 1000;
-  return brightness > 155;
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: getStatusBarHeight(),
+    backgroundColor: "#F7F7F8", // Light background color for contrast
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20, // Added padding for better spacing
+  },
+  button: {
+    width: '80%', // Adjust width as needed
+    paddingVertical: 15,
+    marginVertical: 10,
+    backgroundColor: "#201E43", // Same as StatusBar background color
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 
-export default StatusBarManager;
+export default LoginChoice;

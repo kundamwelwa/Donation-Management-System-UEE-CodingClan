@@ -1,43 +1,55 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, LayoutAnimation, StatusBar, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, LayoutAnimation, StatusBar, ActivityIndicator, Alert } from 'react-native';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
-import { Config } from 'react-native-config'; // Import as named import
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
 
 const Donor_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home');
-  const [notificationCount, setNotificationCount] = useState(5); // Replace with dynamic data
   const [currentDate, setCurrentDate] = useState('');
   const [userName, setUserName] = useState('');
-  const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
   const [orphanageCards, setOrphanageCards] = useState([]);
   const [donationHistory, setDonationHistory] = useState([]);
   const [ongoingCampaigns, setOngoingCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(5);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
-        const token = await getToken(); // Function to get token from your secure storage
-        const headers = { 'Authorization': `Bearer ${token}` };
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          Alert.alert('Error', 'You are not logged in. Please log in again.');
+          navigation.navigate('Donor_Login');
+          return;
+        }
 
-        const userResponse = await axios.get(`${Config.API_URL}/api/user`, { headers });
+        const headers = { Authorization: `Bearer ${token}` };
+        const apiUrl = API_URL || 'http://192.168.43.189:5001/api'; // Fallback URL
+
+        const userResponse = await axios.get(`${apiUrl}/auth/getUser`, { headers });
         setUserName(userResponse.data.name);
 
-        const orphanagesResponse = await axios.get(`${Config.API_URL}/api/orphanages`, { headers });
+        const orphanagesResponse = await axios.get(`${apiUrl}/orphanages/getAllOrphanages`, { headers });
         setOrphanageCards(orphanagesResponse.data);
 
-        const donationsResponse = await axios.get(`${Config.API_URL}/api/donations`, { headers });
+        const donationsResponse = await axios.get(`${apiUrl}/donations/getDonationHistory`, { headers });
         setDonationHistory(donationsResponse.data);
 
-        const campaignsResponse = await axios.get(`${Config.API_URL}/api/campaigns`, { headers });
+        const campaignsResponse = await axios.get(`${apiUrl}/campaigns/getDonatedCampaigns`, { headers });
         setOngoingCampaigns(campaignsResponse.data);
 
-        const date = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+        const date = new Date().toLocaleDateString('en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+        });
         setCurrentDate(date);
       } catch (error) {
         setError('Error fetching data. Please try again later.');
@@ -51,12 +63,8 @@ const Donor_Dashboard = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    StatusBar.setBackgroundColor(backgroundColor);
-  }, [backgroundColor]);
-
-  const getToken = async () => {
-    return 'Y048e0fbf2ca51a2e24adb847077ef0871b795a1bc1bbbbd7ce4008b2a182921a6472590fa8be1ee7e5e0947d9b6fa836a07edec7d36fb83df9d8f7a426810bcf'; 
-  };
+    StatusBar.setBackgroundColor('#FFFFFF');
+  }, []);
 
   const changeSection = (section) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -70,8 +78,8 @@ const Donor_Dashboard = ({ navigation }) => {
       </View>
       <View style={styles.cardFooter}>
         <Text style={styles.cardTitle}>{item.name}</Text>
-        <TouchableOpacity 
-          style={styles.exploreButton} 
+        <TouchableOpacity
+          style={styles.exploreButton}
           onPress={() => navigation.navigate('Orphanage_Feed', { orphanageId: item.id })}
         >
           <Text style={styles.exploreButtonText}>Explore</Text>
@@ -84,7 +92,7 @@ const Donor_Dashboard = ({ navigation }) => {
   const renderDonationHistory = ({ item }) => (
     <View style={styles.historyCard}>
       <Text style={styles.historyDate}>{item.date}</Text>
-      <Text style={styles.historyAmount}>{item.amount}</Text>
+      <Text style={styles.historyAmount}>${item.amount}</Text>
       <Text style={styles.historyCampaign}>{item.campaign}</Text>
     </View>
   );
@@ -105,7 +113,7 @@ const Donor_Dashboard = ({ navigation }) => {
               <FlatList
                 data={orphanageCards}
                 renderItem={renderOrphanageCard}
-                keyExtractor={item => item.id.toString()}
+                keyExtractor={(item) => item.id.toString()}
                 horizontal
                 showsHorizontalScrollIndicator={false}
                 style={styles.orphanageCards}
@@ -113,27 +121,38 @@ const Donor_Dashboard = ({ navigation }) => {
             ) : (
               <View style={styles.noOrphanagesContainer}>
                 <Text style={styles.noOrphanagesText}>You don’t have any Orphanages yet</Text>
-                <Text style={styles.searchInstruction}>Search for orphanages by hitting the Donate button</Text>
+                <Text style={styles.searchInstruction}>
+                  Search for orphanages by hitting the Donate button
+                </Text>
               </View>
             )}
           </View>
         );
       case 'donationHistory':
-        return (
-          <>
-            <FlatList
-              data={donationHistory}
-              renderItem={renderDonationHistory}
-              keyExtractor={item => item.id.toString()}
-              style={styles.historyList}
-            />
-            <FlatList
-              data={ongoingCampaigns}
-              renderItem={renderCampaign}
-              keyExtractor={item => item.id.toString()}
-              style={styles.campaignList}
-            />
-          </>
+        return donationHistory.length > 0 ? (
+          <FlatList
+            data={donationHistory}
+            renderItem={renderDonationHistory}
+            keyExtractor={(item) => item.id.toString()}
+            style={styles.historyList}
+          />
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text>No donation data available.</Text>
+          </View>
+        );
+      case 'ongoingCampaigns':
+        return ongoingCampaigns.length > 0 ? (
+          <FlatList
+            data={ongoingCampaigns}
+            renderItem={renderCampaign}
+            keyExtractor={(item) => item.id.toString()}
+            style={styles.campaignList}
+          />
+        ) : (
+          <View style={styles.noDataContainer}>
+            <Text>No ongoing campaigns available.</Text>
+          </View>
         );
       default:
         return null;
@@ -149,7 +168,7 @@ const Donor_Dashboard = ({ navigation }) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View style={styles.container}>
       <StatusBar backgroundColor="#201E43" barStyle="light-content" />
 
       <View style={styles.userCard}>
@@ -159,27 +178,7 @@ const Donor_Dashboard = ({ navigation }) => {
 
       <View style={styles.spacer} />
 
-      {activeSection === 'home' && (
-        <>
-          <FlatList
-            data={orphanageCards}
-            renderItem={renderOrphanageCard}
-            keyExtractor={item => item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.orphanageCards}
-          />
-
-          <TouchableOpacity style={styles.donateButton} onPress={() => navigation.navigate('Donation')}>
-            <FontAwesome name="dollar" size={30} color="white" />
-            <Text style={styles.donateButtonText}>Donate</Text>
-          </TouchableOpacity>
-
-          <View style={styles.spacer} />
-        </>
-      )}
-
-      {activeSection === 'donationHistory' && renderItem()}
+      {renderItem()}
 
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navButton} onPress={() => changeSection('home')}>
@@ -190,7 +189,7 @@ const Donor_Dashboard = ({ navigation }) => {
           <FontAwesome name="calendar-o" size={24} color="white" />
           <Text style={styles.navButtonText}>Activities</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Campaigns')}>
+        <TouchableOpacity style={styles.navButton} onPress={() => changeSection('ongoingCampaigns')}>
           <FontAwesome name="star" size={24} color="white" />
           <Text style={styles.navButtonText}>Campaigns</Text>
         </TouchableOpacity>

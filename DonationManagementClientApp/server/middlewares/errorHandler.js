@@ -1,10 +1,38 @@
-// Error handling middleware
-const errorHandler = (err, req, res, next) => {
-  console.error(err.stack); // Log error stack to console
-  res.status(err.status || 500).json({
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack }), // Include stack trace in development mode
+
+const errorHandler = (err, _req, res, _next) => {
+
+  console.error('Error Details:', {
+    message: err.message,
+    stack: err.stack,
+    status: err.status,
+    name: err.name,
   });
+
+
+  const statusCode = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+
+  if (err.name === 'ValidationError') {
+    res.status(400).json({
+      message: 'Validation Error',
+      details: err.errors, 
+    });
+  } else if (err.name === 'MongoError' && err.code === 11000) {
+    res.status(400).json({
+      message: 'Duplicate Key Error', 
+    });
+  } else if (err.name === 'JsonWebTokenError') {
+    res.status(401).json({
+      message: 'Invalid Token', 
+    });
+  } else {
+ 
+    res.status(statusCode).json({
+      message,
+      ...(process.env.NODE_ENV === 'development' && { stack: err.stack }), 
+    });
+  }
 };
 
 module.exports = { errorHandler };

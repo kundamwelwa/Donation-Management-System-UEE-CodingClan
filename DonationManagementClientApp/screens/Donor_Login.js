@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, StatusBar, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, StatusBar, Dimensions, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
 
+// Validation schema for login form
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
   password: Yup.string()
@@ -15,25 +18,38 @@ const LoginSchema = Yup.object().shape({
     .required('Password is required'),
 });
 
+// Component definition
 const Donor_Login = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async (values) => {
+    setIsSubmitting(true);
     try {
-      const response = await axios.post('http://192.168.43.189:5001/api/auth/login', values);
-      const { token, user } = response.data;
+      const hardcodedUrl = 'http://192.168.43.189:5001/api'; 
+      const apiUrl = API_URL || hardcodedUrl;
 
-      // Save token and user details to local storage or context
-      // e.g., AsyncStorage.setItem('token', token);
-      // e.g., AsyncStorage.setItem('userName', user.fullName);
+      console.log('Using API URL:', apiUrl);
+      console.log('Login request payload:', values);
+
+      const response = await axios.post(`${apiUrl}/auth/login`, values);
+      console.log('Login response:', response.data);
+
+      if (response.data.message === 'Invalid email or password') {
+        throw new Error('Invalid email or password');
+      }
+
+      const { token, user } = response.data;
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('userName', user.name);
 
       Alert.alert('Login Successful', 'You have logged in successfully.');
-
-      // Navigate to Donor_Dashboard and pass user details
-      navigation.navigate('Donor_dashboard', { userName: user.fullName });
+      navigation.navigate('Donor_dashboard', { userName: user.name });
     } catch (error) {
-      console.error(error);
-      Alert.alert('Login Failed', error.response?.data?.message || 'An error occurred during login.');
+      console.error('Login Error:', error.response ? error.response.data : error.message);
+      Alert.alert('Login Failed', error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -82,8 +98,12 @@ const Donor_Login = ({ navigation }) => {
               <Text style={styles.errorText}>{errors.password}</Text>
             ) : null}
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Login</Text>
+            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Login</Text>
+              )}
             </TouchableOpacity>
 
             <View style={styles.optionsContainer}>

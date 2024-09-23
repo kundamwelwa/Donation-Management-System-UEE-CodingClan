@@ -4,6 +4,7 @@ import Login_choice from "./Login_choice";
 import Donor_Login from "./Donor_Login";
 import Donor_Signup from "./Donor_Signup";
 import Orphanage_Login from "./Orphanage_Login";
+import StatusBarManager from "../Component/StatusBarManager";
 import Orphanage_profile from "./Orphanage_profile";
 import Orphanage_Dashboard from "./Orphanage_Dashboard";
 import Donor_dashboard from "./Donor_dashboard";
@@ -26,6 +27,7 @@ export {
     Orphanage_profile,
     Donor_Profile,
     Add_Donation,
+    StatusBarManager,
     Donation,
     Donor_Notifications,
     Project_Listing, 

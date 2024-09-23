@@ -2,7 +2,6 @@ import React from "react";
 import { TouchableOpacity, ImageBackground, StyleSheet, View, Text, Dimensions, StatusBar } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 
-// Get the screen dimensions
 const { width, height } = Dimensions.get('window');
 
 const localimage = require("../assets/splash.jpg");
@@ -15,10 +14,13 @@ const Splash = (props) => {
 
   return (
     <ImageBackground source={localimage} style={styles.container} blurRadius={10}>
+      {/* Set the StatusBar to transparent */}
       <StatusBar
-        barStyle="light-content" // or "dark-content" depending on the background
-        backgroundColor="rgba(0,0,0,0.5)" // Adjust the background color as needed
+        translucent
+        backgroundColor="transparent"
+        barStyle="light-content" // Set this based on your image contrast
       />
+      
       <LinearGradient
         colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']}
         start={{ x: 0, y: 1 }}
@@ -41,6 +43,9 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    // Ensure the image covers the entire screen including the status bar
+    width: '100%',
+    height: '100%',
   },
   gradientOverlay: {
     flex: 1,
