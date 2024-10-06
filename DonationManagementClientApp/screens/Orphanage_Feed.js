@@ -2,66 +2,57 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native';
 import { Card, ProgressBar } from 'react-native-paper';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
 
-// Mock function to fetch orphanage details (replace with real API call)
-const fetchOrphanageDetails = async (id) => {
-  // Simulate an API call
-  const response = await new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: id,
-        name: 'Bright Future Orphanage',
-        description: 'A safe haven for children in need, providing shelter, education, and care.',
-        image: require('../assets/Images/Orphanage1.jpg'),
-      });
-    }, 1000);
-  });
-  return response;
-};
-
-// Mock project data with progress and location
-const projects = [
-  { id: '1', title: 'New Playground Construction', description: 'Building a new playground for children.', status: 'Ongoing', progress: 70, location: 'Central Park, City', image: require('../assets/Images/Project1.jpg') },
-  { id: '2', title: 'Winter Clothing Drive', description: 'Collecting and distributing winter clothing.', status: 'Upcoming', progress: 0, location: 'Main Hall, Downtown', image: require('../assets/Images/Project2.jpg') },
-  // Add more projects as needed
-];
-
 const Orphanage_Feed = ({ route, navigation }) => {
-  const { orphanageId } = route.params;
+  const { getOrphanageById } = route.params;
   const [orphanageDetails, setOrphanageDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [filteredProjects, setFilteredProjects] = useState([]);
 
   useEffect(() => {
-    const getOrphanageDetails = async () => {
+    const fetchOrphanageDetails = async () => {
       try {
-        const details = await fetchOrphanageDetails(orphanageId);
-        setOrphanageDetails(details);
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          throw new Error('Unauthorized. Please log in again.');
+        }
+
+        const headers = { Authorization: `Bearer ${token}` };
+        const apiUrl = API_URL || 'http://192.168.43.189:5001/api';
+
+        // Fetch orphanage details including projects
+        const response = await axios.get(`${apiUrl}/orphanages/${getOrphanageById}`, { headers });
+        setOrphanageDetails(response.data);
+        setFilteredProjects(response.data.projects || []);  // Assuming 'projects' is part of orphanage data
       } catch (error) {
         console.error("Failed to fetch orphanage details", error);
+        alert("Failed to load orphanage details. Please try again.");
       } finally {
         setLoading(false);
       }
     };
-    
-    getOrphanageDetails();
-  }, [orphanageId]);
+
+    fetchOrphanageDetails();
+  }, [getOrphanageById]);
 
   useEffect(() => {
     // Filter projects based on search term
-    const searchFilter = projects.filter(project => 
+    const searchFilter = (orphanageDetails?.projects || []).filter(project => 
       project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredProjects(searchFilter);
-  }, [searchTerm]);
+  }, [searchTerm, orphanageDetails]);
 
   const renderProjectCard = ({ item }) => (
     <Card style={styles.projectCard}>
-      <Image source={item.image} style={styles.projectImage} />
+      <Image source={{ uri: item.image }} style={styles.projectImage} />
       <View style={styles.projectContent}>
         <Text style={styles.projectTitle}>{item.title}</Text>
         <Text style={styles.projectDescription}>{item.description}</Text>
@@ -71,7 +62,10 @@ const Orphanage_Feed = ({ route, navigation }) => {
           <ProgressBar progress={item.progress / 100} color="#FF5722" style={styles.progressBar} />
         </View>
         <Text style={styles.projectLocation}>Location: {item.location}</Text>
-        <TouchableOpacity style={styles.detailsButton} onPress={() => navigation.navigate('Project_Details', { project: item })}>
+        <TouchableOpacity 
+          style={styles.detailsButton} 
+          onPress={() => navigation.navigate('Project_Details', { project: item })}
+        >
           <Text style={styles.detailsButtonText}>View Details</Text>
           <FontAwesome name="arrow-right" size={20} color="white" />
         </TouchableOpacity>
@@ -100,7 +94,7 @@ const Orphanage_Feed = ({ route, navigation }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{orphanageDetails.name}</Text>
         <Text style={styles.headerDescription}>{orphanageDetails.description}</Text>
-        <Image source={orphanageDetails.image} style={styles.orphanageImage} />
+        <Image source={{ uri: orphanageDetails.image }} style={styles.orphanageImage} />
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
@@ -119,7 +113,7 @@ const Orphanage_Feed = ({ route, navigation }) => {
         <FlatList
           data={filteredProjects}
           renderItem={renderProjectCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()} // Ensure the id is converted to a string
         />
       </ScrollView>
     </View>

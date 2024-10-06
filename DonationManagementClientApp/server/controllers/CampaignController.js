@@ -1,12 +1,11 @@
-// controllers/campaignController.js
-
+const mongoose = require('mongoose');
 const Campaign = require('../models/Campaigns');
 const Donation = require('../models/Donations');
 
 // Create a new campaign (Orphanage only)
 exports.createCampaign = async (req, res) => {
   try {
-    const { name, description, goal, orphanage } = req.body;
+    const { name, description, goal } = req.body;
 
     const newCampaign = new Campaign({
       name,
@@ -42,12 +41,35 @@ exports.getAllCampaigns = async (_req, res) => {
   }
 };
 
+// Get all ongoing campaigns (for Donors and Orphanages)
+exports.getOngoingCampaigns = async (_req, res) => {
+  try {
+    const ongoingCampaigns = await Campaign.find({ status: 'ongoing' })
+      .populate('orphanage', 'orphanageName coverPhoto') // Populate orphanage details
+      .select('name description goal status orphanage');
+
+    if (ongoingCampaigns.length === 0) {
+      return res.status(200).json({ message: 'No ongoing campaigns available.' });
+    }
+
+    res.json(ongoingCampaigns);
+  } catch (error) {
+    console.error('Error fetching ongoing campaigns:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // Update a campaign (Orphanage only)
 exports.updateCampaign = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
 
+    // Validate if the id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
+
+    const updates = req.body;
     const updatedCampaign = await Campaign.findByIdAndUpdate(id, updates, { new: true });
 
     if (!updatedCampaign) {
@@ -65,6 +87,11 @@ exports.updateCampaign = async (req, res) => {
 exports.deleteCampaign = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Validate if the id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: 'Invalid campaign ID' });
+    }
 
     const deletedCampaign = await Campaign.findByIdAndDelete(id);
 
@@ -113,36 +140,3 @@ exports.getDonatedCampaigns = async (req, res) => {
   }
 };
 
-// Get ongoing campaigns (optional, in case you need it)
-exports.getOngoingCampaigns = async (_req, res) => {
-  try {
-    const campaigns = await Campaign.find({ status: 'ongoing' })
-      .populate('orphanage', 'orphanageName coverPhoto')
-      .select('name description goal status orphanage');
-
-    res.json(campaigns);
-  } catch (error) {
-    console.error('Error fetching ongoing campaigns:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-// Get a specific campaign by ID
-exports.getCampaignById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const campaign = await Campaign.findById(id)
-      .populate('orphanage', 'orphanageName coverPhoto')
-      .select('name description goal status orphanage');
-
-    if (!campaign) {
-      return res.status(404).json({ message: 'Campaign not found' });
-    }
-
-    res.json(campaign);
-  } catch (error) {
-    console.error('Error fetching campaign by ID:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};

@@ -19,7 +19,7 @@ exports.getDonationHistory = async (req, res) => {
       .sort({ createdAt: -1 });
 
     if (donations.length === 0) {
-      return res.status(200).json({ message: 'No donation data available.' });
+      return res.status(200).json({ message: 'No donation data available, Go back to "Home" and donate.' });
     }
 
     res.json(donations);

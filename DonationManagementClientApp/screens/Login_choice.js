@@ -1,30 +1,65 @@
-import React from "react";
-import { Text, TouchableOpacity, StyleSheet, View, StatusBar } from "react-native";
+import React, { useRef } from "react";
+import { Text, TouchableOpacity, StyleSheet, View, StatusBar, Animated, Easing } from "react-native";
+import { FontAwesome } from '@expo/vector-icons'; // Make sure to install expo-font-awesome
 
 const LoginChoice = (props) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
 
   const navigateToLogin = (role) => {
     if (role === 'Donor') {
-      props.navigation.navigate('Donor_Login'); // Navigate to Donor_Login screen
+      props.navigation.navigate('Donor_Login'); 
     } else if (role === 'Orphanage') {
-      props.navigation.navigate('Orphanage_Login'); // Assuming you have an OrphanageLogin screen
+      props.navigation.navigate('Orphanage_Login'); 
     }
+  };
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95, 
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      tension: 300,
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
     <View style={styles.container}>
-      {/* Using the StatusBar */}
       <StatusBar
-        barStyle="dark-content" // or "dark-content" depending on your background
-        backgroundColor="#F5F5F5" // Background color to match the design
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
       />
 
-      <TouchableOpacity style={styles.button} onPress={() => navigateToLogin('Donor')}>
-        <Text style={styles.buttonText}>Login as a Donor</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={() => navigateToLogin('Orphanage')}>
-        <Text style={styles.buttonText}>Login as an Orphanage</Text>
-      </TouchableOpacity>
+      <View style={styles.card}>
+        <Text style={styles.headerText}>Choose Login Role</Text>
+
+        <Animated.View style={[styles.buttonContainer, { transform: [{ scale: scaleAnim }] }]}>
+          <TouchableOpacity 
+            style={styles.button} 
+            onPressIn={handlePressIn} 
+            onPressOut={handlePressOut} 
+            onPress={() => navigateToLogin('Donor')}>
+            <FontAwesome name="heart" size={24} color="#181C14" />
+            <Text style={styles.buttonText}>Login as a Donor</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.button} 
+            onPressIn={handlePressIn} 
+            onPressOut={handlePressOut} 
+            onPress={() => navigateToLogin('Orphanage')}>
+            <FontAwesome name="home" size={24} color="#181C14" />
+            <Text style={styles.buttonText}>Login as an Orphanage</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
     </View>
   );
 };
@@ -32,24 +67,53 @@ const LoginChoice = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F7F7F8", // Light background color for contrast
+    backgroundColor: "#FFFFFF", // White background for a clean look
     alignItems: "center",
     justifyContent: "center",
-    padding: 20, // Added padding for better spacing
+    paddingHorizontal: 20,
+  },
+  card: {
+    width: '90%',
+    padding: 30,
+    backgroundColor: "#F7F7F8", // Light grey background for the card
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10, 
+    alignItems: "center",
+  },
+  headerText: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#333", // Dark grey for text
+    marginBottom: 30,
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: "center",
   },
   button: {
-    width: '80%', // Adjust width as needed
+    width: '100%',
     paddingVertical: 15,
     marginVertical: 10,
-    backgroundColor: "#201E43", // Same as StatusBar background color
-    borderRadius: 20,
+    backgroundColor: "#B2B2B2", 
+    borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: 'row', // Align icon and text
+    shadowColor: "#6200EE", 
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonText: {
     fontSize: 18,
-    color: "#fff",
+    color: "#181C14", // Black color for button text
     fontWeight: "bold",
+    marginLeft: 10, // Space between icon and text
   },
 });
 

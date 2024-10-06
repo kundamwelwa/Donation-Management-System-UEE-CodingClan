@@ -131,19 +131,23 @@ const Orphanage_Signup = ({ navigation }) => {
               {/* Type of Orphanage */}
               <View style={styles.inputContainer}>
                 <MaterialCommunityIcons name="domain" size={20} style={styles.icon} />
-                <RNPickerSelect
-                  onValueChange={handleChange('orgType')}
-                  items={[
-                    { label: 'Non-Profit', value: 'non-profit' },
-                    { label: 'Government', value: 'government' },
-                    { label: 'Private', value: 'private' },
-                  ]}
-                  value={values.orgType}
-                  useNativeAndroidPickerStyle={false}
-                  Icon={() => <MaterialCommunityIcons name="chevron-down" size={20} color="#000" style={styles.PickerIcon} />}
-                />
+                <View style={styles.pickerContainer}>
+                  <RNPickerSelect
+                    onValueChange={handleChange('orgType')}
+                    items={[
+                      { label: 'Non-Profit', value: 'non-profit' },
+                      { label: 'Government', value: 'government' },
+                      { label: 'Private', value: 'private' },
+                    ]}
+                    value={values.orgType}
+                    useNativeAndroidPickerStyle={false}
+                    Icon={() => null} // Prevent default icon display
+                  />
+                  <MaterialCommunityIcons name="chevron-down" size={20} color="#000" style={styles.pickerIcon} />
+                </View>
               </View>
               {errors.orgType && touched.orgType && <Text style={styles.errorText}>{errors.orgType}</Text>}
+
 
               {/* Contact Person Name */}
               <View style={styles.inputContainer}>
@@ -273,7 +277,7 @@ const styles = StyleSheet.create({
     marginVertical: height * 0.02,  // Mar
   },
   form: {
-    marginTop: height * 0.02,
+    marginTop: height * 0.01,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -293,8 +297,15 @@ const styles = StyleSheet.create({
     color: '#434242',
   },
 
-  PickerIcon: {
-    marginHorizontal: width * -0.09,
+  pickerContainer: {
+    flex: 1,
+    position: 'relative', // Positioning for the chevron
+  },
+  pickerIcon: {
+    position: 'absolute',
+    right: 10, // Adjust this value as needed
+    top: '190%',
+    transform: [{ translateY: -50 }], // Center vertically
   },
   button: {
     backgroundColor: '#102C57',

@@ -13,7 +13,7 @@ const orphanages = [
   // Add more orphanage data as needed
 ];
 
-const DonationScreen = ({ navigation }) => {
+const Donation = ({ navigation }) => {
   const [searchText, setSearchText] = useState('');
   const [selectedProject, setSelectedProject] = useState('All Projects');
   const [selectedLocation, setSelectedLocation] = useState('All Locations');
@@ -189,4 +189,4 @@ picker: {
   },
 });
 
-export default DonationScreen;
+export default Donation;

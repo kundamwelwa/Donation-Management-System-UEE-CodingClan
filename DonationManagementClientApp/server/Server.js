@@ -1,11 +1,8 @@
-// server.js
-
 require('dotenv').config(); 
 const express = require('express');
 const connectDB = require('./config/db'); 
 const cors = require('cors');
 
-// Import route files
 const authRoutes = require('./routes/authRoutes'); 
 const orphanageRoutes = require('./routes/orphanageAuthRoutes'); 
 const campaignRoutes = require('./routes/CampaignRoutes'); 
@@ -18,14 +15,14 @@ const app = express();
 // Connect to the database
 connectDB(); 
 
-// CORS configuration to allow requests from any origin (for development)
+// Enable CORS
 app.use(cors({
-  origin: '*', // ⚠️ Important: Adjust this in production for security
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Specify allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'] // Specify allowed headers
+  origin: '*', // ⚠️ Consider limiting this to specific domains in production
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 
+  allowedHeaders: ['Content-Type', 'Authorization'] 
 }));
 
-// Parse JSON requests
+// Middleware for parsing JSON request bodies
 app.use(express.json()); 
 
 // Define API routes
@@ -40,5 +37,5 @@ app.use(errorHandler);
 // Start the server
 const PORT = process.env.PORT || 5001; 
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`); // Log the server start
+  console.log(`Server started on port ${PORT}`); 
 });

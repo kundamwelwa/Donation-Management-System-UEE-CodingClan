@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const donorSchema = new mongoose.Schema({
   userType: {
     type: String,
-    enum: ['Personal', 'organization'],
+    enum: ['Personal', 'Organization'],
     required: true,
   },
   fullName: {
@@ -18,31 +18,31 @@ const donorSchema = new mongoose.Schema({
   orgName: {
     type: String,
     required: function () {
-      return this.userType === 'organization';
+      return this.userType === 'Organization';
     },
   },
   orgRegNumber: {
     type: String,
     required: function () {
-      return this.userType === 'organization';
+      return this.userType === 'Organization';
     },
   },
   orgType: {
     type: String,
     required: function () {
-      return this.userType === 'organization';
+      return this.userType === 'Organization';
     },
   },
   contactName: {
     type: String,
     required: function () {
-      return this.userType === 'organization';
+      return this.userType === 'Organization';
     },
   },
   contactPosition: {
     type: String,
     required: function () {
-      return this.userType === 'organization';
+      return this.userType === 'Organization';
     },
   },
   email: {

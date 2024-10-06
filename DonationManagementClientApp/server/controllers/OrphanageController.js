@@ -1,5 +1,3 @@
-// controllers/OrphanageController.js
-
 const Orphanage = require('../models/Orphanages');
 const Donation = require('../models/Donations');
 const jwt = require('jsonwebtoken');
@@ -23,7 +21,7 @@ exports.Orphanagesignup = async (req, res) => {
     contactDetails,
     numberOfChildren,
     password,
-    coverPhoto, // Assuming coverPhoto is also part of the signup
+    coverPhoto,
   } = req.body;
 
   try {
@@ -47,7 +45,6 @@ exports.Orphanagesignup = async (req, res) => {
       password, // Password will be hashed via pre-save hook in the model
       coverPhoto,
       donors: [], // Initialize donors array
-      // Add other fields as necessary
     });
 
     // Save to database (password hashing occurs here)
@@ -96,7 +93,7 @@ exports.Orphanagelogin = async (req, res) => {
         physicalAddress: orphanage.physicalAddress,
         contactDetails: orphanage.contactDetails,
         numberOfChildren: orphanage.numberOfChildren,
-        // Add other necessary fields
+        coverPhoto: orphanage.coverPhoto, // Include coverPhoto in the response
       },
     });
   } catch (error) {
@@ -124,12 +121,10 @@ exports.getOrphanage = async (req, res) => {
   }
 };
 
-// Existing Methods...
-
 // Get All Orphanages
-exports.getAllOrphanages = async (_req, res) => {
+exports.getAllOrphanages = async (req, res) => {
   try {
-    const orphanages = await Orphanage.find().select('orphanageName coverPhoto'); // Adjust fields as necessary
+    const orphanages = await Orphanage.find().select('orphanageName coverPhoto physicalAddress numberOfChildren'); // Ensure fields are included
 
     if (orphanages.length === 0) {
       return res.status(200).json({ message: 'No orphanages registered yet.' });
@@ -179,7 +174,23 @@ exports.getDonatedOrphanages = async (req, res) => {
   }
 };
 
-// Get Orphanages Associated with the Donor (Existing Route)
+// Get Orphanage By ID
+exports.getOrphanageById = async (req, res) => {
+  try {
+    const orphanageId = req.params.id;
+    const orphanage = await Orphanage.findById(orphanageId); // Fetch by ID
+    if (!orphanage) {
+      return res.status(404).json({ message: 'Orphanage not found' });
+    }
+    res.status(200).json(orphanage);
+  } catch (error) {
+    console.error('Error fetching orphanage by ID:', error);
+    res.status(500).json({ message: 'Failed to fetch orphanage details', error });
+  }
+};
+
+
+// Get Orphanages Associated with the Donor
 exports.getOrphanagesForDonor = async (req, res) => {
   try {
     const userId = req.user.id;

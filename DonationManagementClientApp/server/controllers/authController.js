@@ -55,7 +55,7 @@ exports.signup = async (req, res) => {
         return res.status(400).json({ message: 'Full name is required for personal users.' });
       }
       userData.fullName = fullName;
-    } else if (userType === 'organization') {
+    } else if (userType === 'Organization') {
       if (!orgName || !orgRegNumber || !orgType || !contactName || !contactPosition) {
         return res.status(400).json({ message: 'All organization fields are required.' });
       }

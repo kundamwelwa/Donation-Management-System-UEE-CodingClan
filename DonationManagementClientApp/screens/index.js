@@ -9,7 +9,7 @@ import Orphanage_profile from "./Orphanage_profile";
 import Orphanage_Dashboard from "./Orphanage_Dashboard";
 import Donor_dashboard from "./Donor_dashboard";
 import Donor_Notifications from "./Donor_Notifications";
-import Donation from "./Add_Donation";
+import Donation from "./Donation";
 import Donor_Profile from "./Donor_Profile";
 import Orphanage_Signup from "./Orphanage_Signup";
 import Orphanage_Feed from "./Orphanage_Feed";

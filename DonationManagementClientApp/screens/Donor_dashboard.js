@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, LayoutAnimation, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, LayoutAnimation, StatusBar, ActivityIndicator, Alert, ImageBackground } from 'react-native';
 import { Card } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
@@ -7,6 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
+const defaultCoverPhoto = require('../assets/Images/DefaultImage.png');
+const userCardBackgroundImage = require('../assets/Images/UserCardBackground.jpg'); // Add your background image here
 
 const Donor_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home');
@@ -14,7 +16,6 @@ const Donor_Dashboard = ({ navigation }) => {
   const [userName, setUserName] = useState('');
   const [orphanageCards, setOrphanageCards] = useState([]);
   const [donationHistory, setDonationHistory] = useState([]);
-  const [ongoingCampaigns, setOngoingCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [notificationCount, setNotificationCount] = useState(5);
@@ -31,7 +32,7 @@ const Donor_Dashboard = ({ navigation }) => {
         }
 
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http://192.168.43.189:5001/api'; // Fallback URL
+        const apiUrl = API_URL || 'http://192.168.43.189:5001/api';
 
         const userResponse = await axios.get(`${apiUrl}/auth/getUser`, { headers });
         setUserName(userResponse.data.name);
@@ -41,9 +42,6 @@ const Donor_Dashboard = ({ navigation }) => {
 
         const donationsResponse = await axios.get(`${apiUrl}/donations/getDonationHistory`, { headers });
         setDonationHistory(donationsResponse.data);
-
-        const campaignsResponse = await axios.get(`${apiUrl}/campaigns/getDonatedCampaigns`, { headers });
-        setOngoingCampaigns(campaignsResponse.data);
 
         const date = new Date().toLocaleDateString('en-GB', {
           weekday: 'short',
@@ -63,7 +61,8 @@ const Donor_Dashboard = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    StatusBar.setBackgroundColor('#FFFFFF');
+    StatusBar.setTranslucent(true); // Make the status bar translucent
+    StatusBar.setBackgroundColor('transparent'); // Set the background color to transparent
   }, []);
 
   const changeSection = (section) => {
@@ -72,15 +71,28 @@ const Donor_Dashboard = ({ navigation }) => {
   };
 
   const renderOrphanageCard = ({ item }) => (
-    <Card key={item.id} style={styles.card}>
+    <Card key={item._id} style={styles.card}>
       <View style={styles.coverPhotoContainer}>
-        <Image source={{ uri: item.coverPhoto }} style={styles.coverPhoto} />
+        <Image
+          source={item.coverPhoto && typeof item.coverPhoto === 'string' ? { uri: item.coverPhoto } : defaultCoverPhoto}
+          style={styles.coverPhoto}
+        />
       </View>
       <View style={styles.cardFooter}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
+        <Text style={styles.cardTitle}>{item.orphanageName}</Text>
+        <View style={styles.infoContainer}>
+          <View style={styles.infoItem}>
+            <FontAwesome name="map-marker" size={16} color="#474F7A" />
+            <Text style={styles.infoText}>{item.physicalAddress}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <FontAwesome name="child" size={16} color="#474F7A" />
+            <Text style={styles.infoText}>{item.numberOfChildren}</Text>
+          </View>
+        </View>
         <TouchableOpacity
           style={styles.exploreButton}
-          onPress={() => navigation.navigate('Orphanage_Feed', { orphanageId: item.id })}
+          onPress={() => navigation.navigate('Orphanage_Feed', { orphanageId: item._id })}
         >
           <Text style={styles.exploreButtonText}>Explore</Text>
           <FontAwesome name="arrow-right" size={20} color="white" />
@@ -97,43 +109,36 @@ const Donor_Dashboard = ({ navigation }) => {
     </View>
   );
 
-  const renderCampaign = ({ item }) => (
-    <View style={styles.campaignCard}>
-      <Text style={styles.campaignName}>{item.name}</Text>
-      <Text style={styles.campaignStatus}>{item.status}</Text>
-    </View>
-  );
-
   const renderItem = () => {
     switch (activeSection) {
       case 'home':
-        return (
-          <View>
-            {orphanageCards.length > 0 ? (
-              <FlatList
-                data={orphanageCards}
-                renderItem={renderOrphanageCard}
-                keyExtractor={(item) => item.id.toString()}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.orphanageCards}
-              />
-            ) : (
-              <View style={styles.noOrphanagesContainer}>
-                <Text style={styles.noOrphanagesText}>You don’t have any Orphanages yet</Text>
-                <Text style={styles.searchInstruction}>
-                  Search for orphanages by hitting the Donate button
-                </Text>
-              </View>
-            )}
+        return orphanageCards.length > 0 ? (
+          <FlatList
+            data={orphanageCards}
+            renderItem={renderOrphanageCard}
+            keyExtractor={(item) => item._id ? item._id.toString() : Math.random().toString()}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.orphanageCards}
+            contentContainerStyle={{
+              paddingRight: width * 0.09,  // Adds space after the last orphanage card
+            }}
+          />
+        ) : (
+          <View style={styles.noOrphanagesContainer}>
+            <Text style={styles.noOrphanagesText}>You don’t have any Orphanages yet</Text>
+            <Text style={styles.searchInstruction}>
+              Search for orphanages by hitting the Donate button
+            </Text>
           </View>
         );
+
       case 'donationHistory':
         return donationHistory.length > 0 ? (
           <FlatList
             data={donationHistory}
             renderItem={renderDonationHistory}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id ? item.id.toString() : Math.random().toString()}
             style={styles.historyList}
           />
         ) : (
@@ -141,19 +146,7 @@ const Donor_Dashboard = ({ navigation }) => {
             <Text>No donation data available.</Text>
           </View>
         );
-      case 'ongoingCampaigns':
-        return ongoingCampaigns.length > 0 ? (
-          <FlatList
-            data={ongoingCampaigns}
-            renderItem={renderCampaign}
-            keyExtractor={(item) => item.id.toString()}
-            style={styles.campaignList}
-          />
-        ) : (
-          <View style={styles.noDataContainer}>
-            <Text>No ongoing campaigns available.</Text>
-          </View>
-        );
+
       default:
         return null;
     }
@@ -169,31 +162,67 @@ const Donor_Dashboard = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#201E43" barStyle="light-content" />
-
-      <View style={styles.userCard}>
+      <StatusBar
+        barStyle="light-content" // or "dark-content" depending on your background
+        translucent
+        backgroundColor="transparent" // Background color to match the design
+      />
+      {/* User card */}
+      <ImageBackground source={userCardBackgroundImage} style={styles.userCard}>
+        <View style={styles.userCardOverlay} />
         <Text style={styles.userName}>Welcome, {userName}!</Text>
         <Text style={styles.userDate}>{currentDate}</Text>
-      </View>
+      </ImageBackground>
 
       <View style={styles.spacer} />
 
       {renderItem()}
 
+      {/* Donate button with adaptive size */}
+      <TouchableOpacity style={styles.donateButton} onPress={() => navigation.navigate('Donation')}>
+        <FontAwesome name="heart" size={24} color="white" />
+        <Text style={styles.donateButtonText}>Donate</Text>
+      </TouchableOpacity>
+
+      {/* Modernized Bottom Navbar */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton} onPress={() => changeSection('home')}>
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            activeSection === 'home' ? styles.navButtonActive : null,
+          ]}
+          onPress={() => changeSection('home')}
+        >
           <FontAwesome name="home" size={24} color="white" />
           <Text style={styles.navButtonText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => changeSection('donationHistory')}>
+
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            activeSection === 'donationHistory' ? styles.navButtonActive : null,
+          ]}
+          onPress={() => changeSection('donationHistory')}
+        >
           <FontAwesome name="calendar-o" size={24} color="white" />
           <Text style={styles.navButtonText}>Activities</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => changeSection('ongoingCampaigns')}>
+
+        <TouchableOpacity
+          style={[
+            styles.navButton,
+            activeSection === 'ongoingCampaigns' ? styles.navButtonActive : null,
+          ]}
+          onPress={() => changeSection('ongoingCampaigns')}
+        >
           <FontAwesome name="star" size={24} color="white" />
           <Text style={styles.navButtonText}>Campaigns</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Donor_Notifications')}>
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('Donor_Notifications')}
+        >
           <View style={styles.notificationIconContainer}>
             <FontAwesome name="bell" size={24} color="white" />
             {notificationCount > 0 && (
@@ -204,7 +233,11 @@ const Donor_Dashboard = ({ navigation }) => {
           </View>
           <Text style={styles.navButtonText}>Notifications</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Donor_Profile')}>
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('Donor_Profile')}
+        >
           <FontAwesome name="user" size={24} color="white" />
           <Text style={styles.navButtonText}>Profile</Text>
         </TouchableOpacity>
@@ -213,19 +246,28 @@ const Donor_Dashboard = ({ navigation }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: height * 0.01,
+    
   },
   userCard: {
-    paddingVertical: height * 0.11,
-    paddingHorizontal: width * 0.06,
-    backgroundColor: '#201E43',
-    marginBottom: height * 0.01,
-    borderBottomLeftRadius: 15,
-    borderBottomRightRadius: 15,
+    width: width,
+    paddingVertical: height * 0.1,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 15,
+    overflow: 'hidden',
+  },
+  userCardOverlay: {
+    marginTop: 0,
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    //backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   userName: {
     fontSize: width * 0.07,
@@ -241,13 +283,17 @@ const styles = StyleSheet.create({
   },
   orphanageCards: {
     marginBottom: height * 0.03,
-    paddingVertical: height * 0.00,
+    paddingVertical: height * 0.01,
+    paddingHorizontal: width * 0.04,
     textAlign: 'center',
   },
+  singleCardContainer: {
+    justifyContent: 'center',
+  },
   card: {
-    width: width * 0.8, // Adjusted to 80% of screen width
-    height: width * 0.6, // Adjusted height relative to width
-    marginHorizontal: width * 0.02,
+    width: width * 0.9,
+    height: width * 0.6,
+    marginHorizontal: width * 0.01,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     overflow: 'hidden',
@@ -259,44 +305,83 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   coverPhotoContainer: {
-    height: '60%',
+    height: '100%',
     overflow: 'hidden',
   },
   cardFooter: {
-    paddingVertical: width * 0.03,
+    paddingVertical: height * 0.01,  // Reduced padding to make footer shorter
     paddingHorizontal: width * 0.02,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: 'white',        // Keep the background white
     width: '100%',
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    position: 'absolute',
+    bottom: 0,                       // Stick to the bottom of the card
+    height: height * 0.1,            // Define height to make it shorter
+    justifyContent: 'center',
   },
   cardTitle: {
-    fontSize: width * 0.05,
+    fontSize: width * 0.045,
+    color: '#000000',
+    fontFamily: 'sans-serif-medium',  // Set the font family
     fontWeight: 'bold',
-    color: '#201E43',
+    marginBottom: height * 0.005,    // Reduce space between title and info
   },
-  exploreButton: {
+  infoContainer: {
+    marginVertical: height * 0.005,  // Reduce space between title and info icons
     flexDirection: 'row',
     alignItems: 'center',
-    padding: width * 0.02,
-    backgroundColor: '#201E43',
-    borderRadius: 5,
+    justifyContent: 'space-between', // Space between icons
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: width * 0.03,       // Reduced space between info items
+  },
+  infoText: {
+    color: '#000000',
+    marginLeft: width * 0.01,
+    fontSize: width * 0.03,          // Adjust font size to fit better
+  },
+  exploreButton: {
+    position: 'absolute',
+    right: width * 0.02,
+    bottom: height * 0.015,          // Adjust bottom space to fit within shorter footer
+    backgroundColor: '#929AAB',
+    paddingVertical: height * 0.012, // Reduced padding for a smaller button
+    paddingHorizontal: width * 0.03,
+    borderRadius: 20,
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   exploreButtonText: {
     fontSize: width * 0.04,
     color: 'white',
     marginRight: width * 0.01,
   },
+  noOrphanagesContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noOrphanagesText: {
+    fontSize: width * 0.05,
+    textAlign: 'center',
+    marginBottom: height * 0.01,
+  },
+  searchInstruction: {
+    textAlign: 'center',
+    fontSize: width * 0.04,
+    color: '#888888',
+  },
   donateButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#686D76',
     paddingVertical: height * 0.02,
     marginHorizontal: width * 0.2,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    marginBottom: height * 0.10,
+    marginBottom: height * 0.2,
   },
   donateButtonText: {
     color: '#FFFFFF',
@@ -306,17 +391,25 @@ const styles = StyleSheet.create({
   bottomNav: {
     width: '100%',
     flexDirection: 'row',
-    backgroundColor: '#201E43',
+    backgroundColor: '#929AAB',
     justifyContent: 'space-between',
-    paddingVertical: '3%',
+    paddingVertical: '1%',
     paddingHorizontal: '4%',
-    borderTopLeftRadius: 15,
-    borderTopRightRadius: 15,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     position: 'absolute',
     bottom: 0,
   },
   navButton: {
     alignItems: 'center',
+    padding: width * 0.02,
+  },
+  
+  navButtonActive: {
+    backgroundColor: '#656584',
+    borderRadius: 10,
+    paddingHorizontal: width * 0.02,
+    paddingVertical: height * 0.01,
   },
   navButtonText: {
     fontSize: width * 0.03,
@@ -329,8 +422,8 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: 'absolute',
-    top: 0,
-    right: 0,
+    right: -8,
+    top: -5,
     backgroundColor: 'red',
     borderRadius: 10,
     width: 20,
@@ -339,73 +432,38 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   notificationBadgeText: {
-    fontSize: 12,
     color: 'white',
-  },
-  noOrphanagesContainer: {
-    alignItems: 'center',
-    marginTop: height * 0.1,
-  },
-  noOrphanagesText: {
-    fontSize: width * 0.04,
-    color: '#201E43',
-    textAlign: 'center',
-  },
-  searchInstruction: {
-    fontSize: width * 0.03,
-    color: '#201E43',
-    textAlign: 'center',
-    marginTop: height * 0.02,
+    fontSize: 12,
   },
   historyList: {
-    marginBottom: height * 0.03,
+    paddingBottom: height * 0.05,
   },
   historyCard: {
-    padding: width * 0.05,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    marginBottom: height * 0.02,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
+    padding: height * 0.02,
+    borderBottomWidth: 1,
+    borderBottomColor: '#CCCCCC',
   },
   historyDate: {
     fontSize: width * 0.04,
-    color: '#201E43',
+    color: '#888888',
   },
   historyAmount: {
     fontSize: width * 0.05,
     fontWeight: 'bold',
-    color: '#201E43',
   },
   historyCampaign: {
     fontSize: width * 0.04,
-    color: '#CCCCCC',
+    color: '#888888',
   },
-  campaignList: {
-    marginBottom: height * 0.03,
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  campaignCard: {
-    padding: width * 0.05,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    marginBottom: height * 0.02,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  campaignName: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    color: '#201E43',
-  },
-  campaignStatus: {
-    fontSize: width * 0.04,
-    color: '#CCCCCC',
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

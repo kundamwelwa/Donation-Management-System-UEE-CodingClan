@@ -13,7 +13,7 @@ const { width, height } = Dimensions.get('window');
 
 // Validation schema for signup form
 const SignUpSchema = Yup.object().shape({
-  userType: Yup.string().oneOf(['Personal', 'organization'], 'User type is invalid').required('User type is required'),
+  userType: Yup.string().oneOf(['Personal', 'Organization'], 'User type is invalid').required('User type is required'),
   fullName: Yup.string(),
   orgName: Yup.string(),
   orgRegNumber: Yup.string(),
