@@ -26,13 +26,25 @@ const Orphanage_Feed = ({ route, navigation }) => {
         const headers = { Authorization: `Bearer ${token}` };
         const apiUrl = API_URL || 'http://192.168.43.189:5001/api';
 
+        // Log the ID being used for fetching
+        console.log('Fetching orphanage details for ID:', getOrphanageById);
+
         // Fetch orphanage details including projects
         const response = await axios.get(`${apiUrl}/orphanages/${getOrphanageById}`, { headers });
         setOrphanageDetails(response.data);
         setFilteredProjects(response.data.projects || []);  // Assuming 'projects' is part of orphanage data
       } catch (error) {
-        console.error("Failed to fetch orphanage details", error);
-        alert("Failed to load orphanage details. Please try again.");
+        if (error.response) {
+          console.error("Response error:", error.response.data);
+          console.error("Response status:", error.response.status);
+          alert("Failed to load orphanage details: " + error.response.data.message);
+        } else if (error.request) {
+          console.error("Request error:", error.request);
+          alert("Failed to load orphanage details. No response from server.");
+        } else {
+          console.error("General error:", error.message);
+          alert("Failed to load orphanage details. Please try again.");
+        }
       } finally {
         setLoading(false);
       }
@@ -110,11 +122,17 @@ const Orphanage_Feed = ({ route, navigation }) => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollView}>
-        <FlatList
-          data={filteredProjects}
-          renderItem={renderProjectCard}
-          keyExtractor={(item) => item.id.toString()} // Ensure the id is converted to a string
-        />
+        {filteredProjects.length === 0 ? (
+          <View style={styles.noProjectsContainer}>
+            <Text style={styles.noProjectsText}>No projects listed yet for this orphanage.</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredProjects}
+            renderItem={renderProjectCard}
+            keyExtractor={(item) => item.id.toString()} // Ensure the id is converted to a string
+          />
+        )}
       </ScrollView>
     </View>
   );
@@ -255,6 +273,23 @@ const styles = StyleSheet.create({
     fontSize: width * 0.05,
     color: '#FF0000',
   },
+
+  // New styles for the no projects alert
+  noProjectsContainer: {
+    padding: height * 0.02,
+    borderRadius: 10,
+    backgroundColor: '#FFEB3B',
+    alignItems: 'center',
+    marginVertical: height * 0.02,
+    marginHorizontal: width * 0.02,
+  },
+  noProjectsText: {
+    fontSize: width * 0.045,
+    fontWeight: 'bold',
+    color: '#201E43',
+    textAlign: 'center',
+  },
+
 });
 
 export default Orphanage_Feed;

@@ -41,10 +41,10 @@ exports.validateOrphanageSignup = [
     .withMessage('Number of children must be a number'),
 
   check('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
     .notEmpty()
-    .withMessage('Password is required'),
+    .withMessage('Password is required')
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters long'),
 
   // Middleware to handle validation errors
   (req, res, next) => {
@@ -63,6 +63,8 @@ exports.validateOrphanageSignup = [
 // Validation rules for orphanage login
 exports.validateOrphanageLogin = [
   check('email')
+    .notEmpty()
+    .withMessage('Email is required')
     .isEmail()
     .withMessage('Invalid email'),
 

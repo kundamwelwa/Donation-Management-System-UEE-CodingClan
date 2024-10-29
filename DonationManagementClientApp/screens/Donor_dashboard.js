@@ -251,6 +251,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingBottom: height * 0.01,
+    backgroundColor: '#EBF4F6',
     
   },
   userCard: {
@@ -346,7 +347,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: width * 0.02,
     bottom: height * 0.015,          // Adjust bottom space to fit within shorter footer
-    backgroundColor: '#929AAB',
+    backgroundColor: '#071952',
     paddingVertical: height * 0.012, // Reduced padding for a smaller button
     paddingHorizontal: width * 0.03,
     borderRadius: 20,
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     color: '#888888',
   },
   donateButton: {
-    backgroundColor: '#686D76',
+    backgroundColor: '#071952',
     paddingVertical: height * 0.02,
     marginHorizontal: width * 0.2,
     borderRadius: 30,
@@ -391,7 +392,7 @@ const styles = StyleSheet.create({
   bottomNav: {
     width: '100%',
     flexDirection: 'row',
-    backgroundColor: '#929AAB',
+    backgroundColor: '#071952',
     justifyContent: 'space-between',
     paddingVertical: '1%',
     paddingHorizontal: '4%',
@@ -406,7 +407,7 @@ const styles = StyleSheet.create({
   },
   
   navButtonActive: {
-    backgroundColor: '#656584',
+    backgroundColor: '#021526',
     borderRadius: 10,
     paddingHorizontal: width * 0.02,
     paddingVertical: height * 0.01,

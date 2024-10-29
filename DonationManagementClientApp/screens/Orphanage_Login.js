@@ -21,31 +21,40 @@ const Orphanage_Login = ({ navigation }) => {
 
   const handleLogin = async (values) => {
     try {
-      const apiUrl = 'http://192.168.43.189:5001/api'; // Replace with your backend API URL
-
+      const apiUrl = 'http://192.168.43.189:5001/api';
+  
       console.log('Using API URL:', apiUrl);
-      console.log('Login request payload:', values); // Log the request payload
-
+      console.log('Login request payload:', values);
+  
       const response = await axios.post(`${apiUrl}/orphanages/Orphanagelogin`, values);
-
-      console.log('Login response:', response.data);
-
-      if (response.data.message === 'Invalid email or password') {
-        throw new Error('Invalid email or password');
+  
+      // Log the entire response to see the structure
+      console.log('Full login response data:', response.data);
+  
+      const token = response.data.token;
+      const name = response.data.name || response.data.user?.name || response.data.fullName; // Check multiple fields
+  
+      // Log individual fields to see what exists
+      console.log('Token:', token);
+      console.log('Name:', name);
+  
+      if (!token || !name) {
+        throw new Error('User data is incomplete or missing.');
       }
-
-      const { token, user } = response.data;
-
+  
       await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userName', user.name);
-
+      await AsyncStorage.setItem('userName', name);
+  
       Alert.alert('Login Successful', 'You have logged in successfully.');
-      navigation.navigate('Orphanage_Dashboard', { userName: user.name });
+      navigation.navigate('Orphanage_Dashboard', { userName: name });
     } catch (error) {
       console.error('Login Error:', error.response?.data || error.message);
       Alert.alert('Login Failed', error.response?.data?.message || 'An unexpected error occurred. Please try again.');
     }
   };
+  
+  
+  
 
   return (
     <View style={styles.container}>

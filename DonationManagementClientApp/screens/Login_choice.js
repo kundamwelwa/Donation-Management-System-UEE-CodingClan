@@ -46,7 +46,7 @@ const LoginChoice = (props) => {
             onPressIn={handlePressIn} 
             onPressOut={handlePressOut} 
             onPress={() => navigateToLogin('Donor')}>
-            <FontAwesome name="heart" size={24} color="#181C14" />
+            <FontAwesome name="heart" size={24} color="#F4F6FF" />
             <Text style={styles.buttonText}>Login as a Donor</Text>
           </TouchableOpacity>
 
@@ -55,7 +55,7 @@ const LoginChoice = (props) => {
             onPressIn={handlePressIn} 
             onPressOut={handlePressOut} 
             onPress={() => navigateToLogin('Orphanage')}>
-            <FontAwesome name="home" size={24} color="#181C14" />
+            <FontAwesome name="home" size={24} color="#F4F6FF" />
             <Text style={styles.buttonText}>Login as an Orphanage</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -67,7 +67,7 @@ const LoginChoice = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF", // White background for a clean look
+    backgroundColor: "#F4F6FF", // White background for a clean look
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 20,
@@ -75,7 +75,7 @@ const styles = StyleSheet.create({
   card: {
     width: '90%',
     padding: 30,
-    backgroundColor: "#F7F7F8", // Light grey background for the card
+    backgroundColor: "#78B7D0", // Light grey background for the card
     borderRadius: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#333", // Dark grey for text
+    color: "#F4F6FF", // Dark grey for text
     marginBottom: 30,
   },
   buttonContainer: {
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 15,
     marginVertical: 10,
-    backgroundColor: "#B2B2B2", 
+    backgroundColor: "#071952", 
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 18,
-    color: "#181C14", // Black color for button text
+    color: "#F4F6FF", // Black color for button text
     fontWeight: "bold",
     marginLeft: 10, // Space between icon and text
   },

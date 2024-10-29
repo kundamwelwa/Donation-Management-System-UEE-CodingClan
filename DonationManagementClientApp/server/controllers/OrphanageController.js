@@ -111,15 +111,23 @@ exports.getOrphanage = async (req, res) => {
     const orphanage = await Orphanage.findById(orphanageId).select('-password'); // Exclude password
 
     if (!orphanage) {
+      console.log(`GetOrphanage Error: No orphanage found with ID ${orphanageId}.`);
       return res.status(404).json({ message: 'Orphanage not found.' });
     }
 
-    res.json(orphanage);
+    res.json({
+      name: orphanage.name,
+      description: orphanage.description,
+      location: orphanage.location, // Include other relevant fields if needed
+      contactInfo: orphanage.contactInfo,
+      // Add any other fields you want to return
+    });
   } catch (error) {
     console.error('Error fetching orphanage profile:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 // Get All Orphanages
 exports.getAllOrphanages = async (req, res) => {
@@ -178,16 +186,30 @@ exports.getDonatedOrphanages = async (req, res) => {
 exports.getOrphanageById = async (req, res) => {
   try {
     const orphanageId = req.params.id;
+
+    // Validate the orphanage ID format (assuming it's a MongoDB ObjectId)
+    if (!orphanageId || !isValidObjectId(orphanageId)) {
+      return res.status(400).json({ message: 'Invalid orphanage ID format' });
+    }
+
     const orphanage = await Orphanage.findById(orphanageId); // Fetch by ID
     if (!orphanage) {
       return res.status(404).json({ message: 'Orphanage not found' });
     }
+
     res.status(200).json(orphanage);
   } catch (error) {
     console.error('Error fetching orphanage by ID:', error);
-    res.status(500).json({ message: 'Failed to fetch orphanage details', error });
+    res.status(500).json({ message: 'Failed to fetch orphanage details', error: error.message });
   }
 };
+
+// Helper function to validate ObjectId (if using MongoDB)
+const isValidObjectId = (id) => {
+  const ObjectId = require('mongoose').Types.ObjectId;
+  return ObjectId.isValid(id);
+};
+
 
 
 // Get Orphanages Associated with the Donor
