@@ -13,7 +13,6 @@ import Donation from "./Donation";
 import Donor_Profile from "./Donor_Profile";
 import Orphanage_Signup from "./Orphanage_Signup";
 import Orphanage_Feed from "./Orphanage_Feed";
-import Add_Donation from "./Add_Donation";
 import Project_Details from "./Project_Details";
 import Project_Listing from "./Project_Listing";  // Make sure this is imported correctly
 
@@ -26,7 +25,6 @@ export {
     Orphanage_Login,
     Orphanage_profile,
     Donor_Profile,
-    Add_Donation,
     StatusBarManager,
     Donation,
     Donor_Notifications,

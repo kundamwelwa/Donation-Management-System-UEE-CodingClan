@@ -1,222 +1,150 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  FlatList, 
-  Dimensions, 
-  ScrollView, 
-  LayoutAnimation,
-  Animated // Import Animated
-} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, StatusBar, Alert, ImageBackground } from 'react-native';
+import { Card, FAB } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
-import StatusBarManager from '../Component/StatusBarManager';
-import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
+const defaultCoverPhoto = require('../assets/Images/DefaultImage.png');
+const userCardBackgroundImage = require('../assets/Images/UserCardBackground.jpg');
 
-const orphanageRequests = [
-  { id: '1', donor: 'John Doe', request: 'Food Supplies', status: 'Pending' },
-  { id: '2', donor: 'Jane Smith', request: 'Clothing', status: 'Approved' },
-  // Add more requests as needed
-];
-
-const Orphanage_Dashboard = () => {
+const Orphanage_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home');
-  const [currentDate, setCurrentDate] = useState('');
-  const [isFabOpen, setIsFabOpen] = useState(false); // Added state for FAB
-  const navigation = useNavigation();
-
-  // Create animated value for the welcome message
-  const welcomeOpacity = useRef(new Animated.Value(0)).current;
-  const welcomeTranslateY = useRef(new Animated.Value(-10)).current;
-
-  // Animated values for FAB buttons
-  const fabAnimation = useRef(new Animated.Value(0)).current;
+  const [userName, setUserName] = useState('');
+  const [location, setLocation] = useState('');
+  const [numberOfChildren, setNumberOfChildren] = useState(0);
+  const [orphanageCards, setOrphanageCards] = useState([]);
+  const [fabOpen, setFabOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(3);
 
   useEffect(() => {
-    // Set the current date dynamically
-    const date = new Date();
-    const formattedDate = date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
-    setCurrentDate(formattedDate);
-
-    // Trigger the welcome message animation
-    Animated.sequence([
-      Animated.timing(welcomeTranslateY, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(welcomeOpacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    const fetchData = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        console.log('Using API Token:', token); // Log the token being used
+        
+        if (!token) {
+          Alert.alert('Error', 'You are not logged in. Please log in again.');
+          navigation.navigate('Orphanage_Login');
+          return;
+        }
+        
+        const headers = { Authorization: `Bearer ${token}` };
+        const apiUrl = API_URL || 'http://192.168.8.106:5001/api';
+        
+        const userResponse = await axios.get(`${apiUrl}/orphanages/getOrphanage`, { headers });
+        
+        // Accessing nested data correctly
+        const orphanageData = userResponse.data.orphanage || {};
+        const { name, physicalAddress, numberOfChildren } = orphanageData;
+        
+        console.log('Extracted Data:', { name, physicalAddress, numberOfChildren });
+        
+        if (!name || !physicalAddress || !numberOfChildren) {
+          throw new Error('User data is incomplete or missing.');
+        }
+        
+        setUserName(name);
+        setLocation(physicalAddress);
+        setNumberOfChildren(numberOfChildren);
+      } catch (error) {
+        console.error('Error fetching data:', error.message);
+        Alert.alert('Error', error.response ? error.response.data.message : error.message);
+      }
+    };
+    
+    fetchData();
   }, []);
-
-  const toggleFab = () => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setIsFabOpen(!isFabOpen);
-    Animated.timing(fabAnimation, {
-      toValue: isFabOpen ? 0 : 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  // Define the fabButtonStyle function
-  const fabButtonStyle = (order) => ({
-    transform: [
-      {
-        translateY: fabAnimation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -(order * 60)],
-        }),
-      },
-      {
-        scale: fabAnimation,
-      },
-    ],
-    opacity: fabAnimation,
-  });
-
-  const changeSection = (section) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setActiveSection(section);
-  };
-
-  const handleViewRequest = (id) => {
-    console.log(`Viewing request with ID: ${id}`);
-  };
-
-  const handleApproveRequest = (id) => {
-    console.log(`Approving request with ID: ${id}`);
-  };
-
-  const handleRejectRequest = (id) => {
-    console.log(`Rejecting request with ID: ${id}`);
-  };
+  
+  
+  const toggleFab = () => setFabOpen(!fabOpen);
 
   return (
     <View style={styles.container}>
-      <StatusBarManager backgroundColor="#201E43" barStyle="light-content" />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+      
+      {/* User Card */}
+      <ImageBackground source={userCardBackgroundImage} style={styles.userCard}>
+  <View style={styles.userCardOverlay} />
+  {/* Display userName only if it's a valid string */}
+  <Text style={styles.userName}>{userName ? userName : 'Orphanage Name'}</Text>
+  
+  <View style={styles.userInfoContainer}>
+    {/* Location */}
+    <View style={styles.infoItem}>
+      <FontAwesome name="map-marker" size={18} color="white" />
+      <Text style={styles.infoText}>{location ? location : 'Location not provided'}</Text>
+    </View>
+    
+    {/* Number of Children */}
+    <View style={styles.infoItem}>
+      <FontAwesome name="child" size={18} color="white" />
+      <Text style={styles.infoText}>
+        {typeof numberOfChildren === 'number' ? numberOfChildren : 'N/A'} children
+      </Text>
+    </View>
+  </View>
+</ImageBackground>
 
-      <View style={styles.userCard}>
-        {/* Animated Welcome Message */}
-        <Animated.Text 
-          style={[
-            styles.welcomeText, 
-            { 
-              opacity: welcomeOpacity,
-              transform: [{ translateY: welcomeTranslateY }]
-            }
-          ]}
-        >
-          WELCOME
-        </Animated.Text>
-        <Text style={styles.userName}>CHAPAMO FOREVER ORPHANAGE!</Text>
-        <Text style={styles.userDate}>{currentDate}</Text>
-      </View>
 
-      {activeSection === 'home' && (
-        <ScrollView
-          contentContainerStyle={styles.dashboardContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.iconContainer}>
-            <TouchableOpacity style={styles.iconCard}>
-              <FontAwesome name="dollar" size={24} color="#134B70" />
-              <Text style={styles.iconText}>Total Donations</Text>
-              <Text style={styles.iconValue}>$10,000</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconCard}>
-              <FontAwesome name="envelope" size={24} color="#134B70" />
-              <Text style={styles.iconText}>Pending Requests</Text>
-              <Text style={styles.iconValue}>5</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconCard}>
-              <FontAwesome name="calendar" size={24} color="#134B70" />
-              <Text style={styles.iconText}>Upcoming Events</Text>
-              <Text style={styles.iconValue}>3 Events</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconCard}>
-              <FontAwesome name="briefcase" size={24} color="#134B70" />
-              <Text style={styles.iconText}>Projects</Text>
-              <Text style={styles.iconValue}>2 Projects</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconCard}>
-              <FontAwesome name="users" size={24} color="#134B70" />
-              <Text style={styles.iconText}>Recent Donors</Text>
-              <Text style={styles.iconValue}>John Doe, Jane Smith</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
+      {/* FAB for Actions */}
+      <FAB
+        style={styles.fab}
+        icon={fabOpen ? 'close' : 'plus'}
+        onPress={toggleFab}
+      />
+      {fabOpen && (
+        <View style={styles.fabOptions}>
+          <TouchableOpacity style={styles.fabOption} onPress={() => navigation.navigate('Create_Project')}>
+            <FontAwesome name="pencil" size={20} color="#021526" />
+            <Text style={styles.fabOptionText}>Create Project</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.fabOption} onPress={() => navigation.navigate('Create_Campaign')}>
+            <FontAwesome name="bullhorn" size={20} color="#021526" />
+            <Text style={styles.fabOptionText}>Create Campaign</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
-      {activeSection === 'requests' && (
-        <>
-          <Text style={styles.sectionTitle}>Requests from Donors</Text>
-          <FlatList
-            data={orphanageRequests}
-            renderItem={({ item }) => (
-              <View style={styles.requestCard}>
-                <Text style={styles.requestDonor}>{item.donor}</Text>
-                <Text style={styles.requestDetail}>{item.request}</Text>
-                <Text style={styles.requestStatus}>{item.status}</Text>
-                <View style={styles.requestActions}>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleViewRequest(item.id)}>
-                    <Text style={styles.actionButtonText}>View</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleApproveRequest(item.id)}>
-                    <Text style={styles.actionButtonText}>Approve</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleRejectRequest(item.id)}>
-                    <Text style={styles.actionButtonText}>Reject</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-            keyExtractor={(item) => item.id}
-          />
-        </>
-      )}
-
+      {/* Bottom Navbar */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton} onPress={() => changeSection('home')}>
+        <TouchableOpacity
+          style={[styles.navButton, activeSection === 'home' && styles.navButtonActive]}
+          onPress={() => changeSection('home')}
+        >
           <FontAwesome name="home" size={24} color="white" />
           <Text style={styles.navButtonText}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => changeSection('requests')}>
-          <FontAwesome name="envelope-open" size={23} color="white" />
-          <Text style={styles.navButtonText}>Requests</Text>
+        
+        <TouchableOpacity
+          style={[styles.navButton, activeSection === 'donors' && styles.navButtonActive]}
+          onPress={() => changeSection('donors')}
+        >
+          <FontAwesome name="users" size={24} color="white" />
+          <Text style={styles.navButtonText}>Donors</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Statistics_Screen')}>
-          <FontAwesome name="line-chart" size={24} color="white" />
-          <Text style={styles.navButtonText}>Statistics</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => console.log('Navigate to Notifications')}>
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('Notifications')}
+        >
           <FontAwesome name="bell" size={24} color="white" />
+          {notificationCount > 0 && (
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>{notificationCount}</Text>
+            </View>
+          )}
           <Text style={styles.navButtonText}>Notifications</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => navigation.navigate('Orphanage_profile')}>
+
+        <TouchableOpacity
+          style={styles.navButton}
+          onPress={() => navigation.navigate('Orphanage_Profile')}
+        >
           <FontAwesome name="user" size={24} color="white" />
           <Text style={styles.navButtonText}>Profile</Text>
-        </TouchableOpacity>
-      </View>
-
-       {/* Floating Action Button */}
-      <View style={styles.fabContainer}>
-        <TouchableOpacity onPress={() => console.log('Add a Campaign')} style={[styles.fabButton, fabButtonStyle(1)]}>
-          <FontAwesome name="bullhorn" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Project_Listing')} style={[styles.fabButton, fabButtonStyle(2)]}>
-          <FontAwesome name="tasks" size={24} color="white" />
-        </TouchableOpacity>
-        {/* Add more buttons if necessary */}
-        <TouchableOpacity onPress={toggleFab} style={styles.fabMain}>
-          <FontAwesome name={isFabOpen ? 'times' : 'plus'} size={24} color="white" />
         </TouchableOpacity>
       </View>
     </View>
@@ -226,155 +154,107 @@ const Orphanage_Dashboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: height * 0.00,
+    paddingBottom: height * 0.01,
+    backgroundColor: '#EBF4F6',
   },
   userCard: {
+    width,
     paddingVertical: height * 0.1,
-    paddingHorizontal: width * 0.07,
-    backgroundColor: '#201E43',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginBottom: height * 0.02,
+    justifyContent: 'center',
     alignItems: 'center',
+    borderBottomRightRadius: 15,
+    borderBottomLeftRadius: 15,
+    overflow: 'hidden',
   },
-  welcomeText: {
-    marginVertical: height * -0.07,
-    fontSize: width * 0.08,
-    fontWeight: 'bold',
-    color: '#F0F8FF',
-    marginBottom: height * 0.02,
+  userCardOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   userName: {
-    fontSize: width * 0.07,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#508C9B',
-    marginBottom: height * 0.02,
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 5,
   },
-  userDate: {
-    fontSize: width * 0.04,
-    color: '#EEEEEE',
+  userInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    paddingHorizontal: 20,
+    marginTop: 10,
   },
-  dashboardContent: {
-    flexDirection: 'column',
+  infoItem: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  iconContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    paddingHorizontal: width * 0.04,
-    paddingVertical: height * 0.04,
+  infoText: {
+    color: 'white',
+    fontSize: 16,
+    marginLeft: 8,
   },
-  iconCard: {
-    width: width * 0.4,
-    margin: width * 0.02,
-    padding: width * 0.04,
-    backgroundColor: '#EEEEEE',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
+  fab: {
+    position: 'absolute',
+    bottom: 70,
+    right: 20,
+    backgroundColor: '#007AFF',
+  },
+  fabOptions: {
+    position: 'absolute',
+    bottom: 140,
+    right: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    elevation: 4,
+  },
+  fabOption: {
+    flexDirection: 'row',
     alignItems: 'center',
+    padding: 10,
   },
-  iconText: {
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: height * 0.01,
-  },
-  iconValue: {
-    fontSize: width * 0.045,
-    color: '#134B70',
-  },
-  sectionTitle: {
-    fontSize: width * 0.05,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: height * 0.01,
-    marginLeft: width * 0.04,
-  },
-  requestCard: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: width * 0.04,
-    marginBottom: height * 0.01,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  requestDonor: {
-    fontSize: width * 0.04,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: height * 0.01,
-  },
-  requestDetail: {
-    fontSize: width * 0.035,
-    color: '#666',
-  },
-  requestStatus: {
-    fontSize: width * 0.035,
-    color: '#134B70',
-    marginBottom: height * 0.01,
-  },
-  requestActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: height * 0.01,
-  },
-  actionButton: {
-    backgroundColor: '#134B70',
-    padding: width * 0.02,
-    borderRadius: 15,
-  },
-  actionButtonText: {
-    color: '#FFF',
-    fontSize: width * 0.035,
+  fabOptionText: {
+    color: '#021526',
+    fontSize: 16,
+    marginLeft: 8,
   },
   bottomNav: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#201E43',
-    height: height * 0.08,
-    borderTopRightRadius: 15,
-    borderTopLeftRadius: 15,
+    justifyContent: 'space-between',
+    backgroundColor: '#0057D9',
+    paddingVertical: 10,
+    paddingBottom: 0,position: 'absolute', // Positioning changed to absolute
+    bottom: 0,           // Fixed to the bottom of the screen
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#0057D9',
+    paddingVertical: 10,
+    paddingBottom: 0,
   },
   navButton: {
+    flex: 1,
     alignItems: 'center',
+  },
+  navButtonActive: {
+    backgroundColor: '#003C99',
   },
   navButtonText: {
-    color: '#FFFFFF',
-    fontSize: width * 0.03,
+    color: 'white',
+    fontSize: 10,
+    marginTop: 4,
   },
-  fabContainer: {
+  notificationBadge: {
     position: 'absolute',
-    bottom: 80,
-    right: 20,
-    
+    right: 12,
+    top: 5,
+    backgroundColor: 'red',
+    borderRadius: 10,
+    padding: 2,
   },
-  fabMain: {
-    marginVertical: height * 0.00,
-    backgroundColor: '#201E43',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fabButton: {
-    position: 'absolute',
-    right: 0,
-    backgroundColor: '#134B70',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
+  notificationBadgeText: {
+    color: 'white',
+    fontSize: 10,
   },
 });
 

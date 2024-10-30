@@ -12,7 +12,6 @@ import Donation from './screens/Donation';
 import Orphanage_Feed from './screens/Orphanage_Feed';
 import Donor_Profile from './screens/Donor_Profile';
 import Donor_Notifications from './screens/Donor_Notifications';
-import Add_Donation from './screens/Add_Donation';
 import Project_Listing from './screens/Project_Listing';
 import Donor_Signup from './screens/Donor_Signup';
 import Project_Details from './screens/Project_Details';
@@ -44,7 +43,6 @@ export default function App() {
         <Stack.Screen name="Project_Listing" component={Project_Listing} />
         <Stack.Screen name="Orphanage_Feed" component={Orphanage_Feed} />
         <Stack.Screen name="Donor_Profile" component={Donor_Profile} />
-        <Stack.Screen name="Add_Donation" component={Add_Donation} />
         <Stack.Screen name="Project_Details" component={Project_Details} />
 
       </Stack.Navigator>

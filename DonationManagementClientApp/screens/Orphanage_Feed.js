@@ -24,7 +24,7 @@ const Orphanage_Feed = ({ route, navigation }) => {
         }
 
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http://192.168.43.189:5001/api';
+        const apiUrl = API_URL || 'http://192.168.8.106:5001/api';
 
         // Log the ID being used for fetching
         console.log('Fetching orphanage details for ID:', getOrphanageById);

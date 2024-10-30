@@ -4,10 +4,11 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Import MaterialIcons for icons
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width, height } = Dimensions.get('window');
 
+// Define validation schema using Yup
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
   password: Yup.string()
@@ -21,41 +22,41 @@ const Orphanage_Login = ({ navigation }) => {
 
   const handleLogin = async (values) => {
     try {
-      const apiUrl = 'http://192.168.43.189:5001/api';
-  
+      const apiUrl = 'http://192.168.8.106:5001/api';
+      
       console.log('Using API URL:', apiUrl);
       console.log('Login request payload:', values);
-  
+
       const response = await axios.post(`${apiUrl}/orphanages/Orphanagelogin`, values);
-  
-      // Log the entire response to see the structure
+
+      // Log the entire response to inspect the structure
       console.log('Full login response data:', response.data);
-  
+
       const token = response.data.token;
-      const name = response.data.name || response.data.user?.name || response.data.fullName; // Check multiple fields
-  
-      // Log individual fields to see what exists
-      console.log('Token:', token);
-      console.log('Name:', name);
-  
+      const orphanageData = response.data.orphanage || {};
+      const name = orphanageData.name || orphanageData.contactName || response.data.user?.name || response.data.fullName; // Check multiple fields
+
+      // Log extracted values for debugging
+      console.log('Extracted Token:', token);
+      console.log('Extracted Name:', name);
+
       if (!token || !name) {
         throw new Error('User data is incomplete or missing.');
       }
-  
+
+      // Store the token and user name in AsyncStorage
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('userName', name);
-  
+
       Alert.alert('Login Successful', 'You have logged in successfully.');
       navigation.navigate('Orphanage_Dashboard', { userName: name });
     } catch (error) {
-      console.error('Login Error:', error.response?.data || error.message);
-      Alert.alert('Login Failed', error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+      const errorMessage = error.response?.data?.message || 'An unexpected error occurred. Please try again.';
+      console.error('Login Error:', errorMessage);
+      Alert.alert('Login Failed', errorMessage);
     }
   };
   
-  
-  
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Orphanage Login</Text>

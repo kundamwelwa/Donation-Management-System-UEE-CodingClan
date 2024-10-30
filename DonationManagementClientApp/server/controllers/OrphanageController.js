@@ -61,46 +61,44 @@ exports.Orphanagesignup = async (req, res) => {
 };
 
 // Orphanage Login
-exports.Orphanagelogin = async (req, res) => {
+exports.OrphanageLogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    // Check if email and password are provided
+    if (!email || !password) {
+      console.log('Login Error: Email and password are required.');
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Normalize email
+    const normalizedEmail = email.toLowerCase();
+
     // Find orphanage by email
-    const orphanage = await Orphanage.findOne({ email: email.toLowerCase() });
+    const orphanage = await Orphanage.findOne({ email: normalizedEmail });
     if (!orphanage) {
+      console.log(`Login Error: No orphanage found with email ${normalizedEmail}.`);
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
     // Compare passwords using the model's method
     const isMatch = await orphanage.comparePassword(password);
     if (!isMatch) {
+      console.log(`Login Error: Password mismatch for orphanage ${normalizedEmail}.`);
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
     // Generate JWT token
     const token = generateOrphanageToken(orphanage._id);
+    console.log(`JWT Token generated for orphanage ${orphanage.email}: ${token}`);
 
-    res.json({
-      token,
-      orphanage: {
-        id: orphanage._id,
-        email: orphanage.email,
-        name: orphanage.orphanageName,
-        regNumber: orphanage.regNumber,
-        orgType: orphanage.orgType,
-        contactName: orphanage.contactName,
-        contactPosition: orphanage.contactPosition,
-        physicalAddress: orphanage.physicalAddress,
-        contactDetails: orphanage.contactDetails,
-        numberOfChildren: orphanage.numberOfChildren,
-        coverPhoto: orphanage.coverPhoto, // Include coverPhoto in the response
-      },
-    });
+    // Respond with token and orphanage information
   } catch (error) {
     console.error('Error during orphanage login:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
 
 // Get Orphanage Profile
 exports.getOrphanage = async (req, res) => {

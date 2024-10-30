@@ -36,7 +36,7 @@ const Donor_Signup = ({ navigation }) => {
   const handleSignUp = async (values, { resetForm }) => {
     setIsSubmitting(true);
     
-    const apiUrl = API_URL || 'http://192.168.43.189:5001/api'; // Use API_URL from env or fallback
+    const apiUrl = API_URL || '192.168.8.106:5001/api'; // Use API_URL from env or fallback
 
     console.log('Using API URL:', apiUrl);
     console.log('Signup request payload:', values);
