@@ -1,5 +1,3 @@
-// middlewares/authorizeCampaign.js
-
 const Campaign = require('../models/Campaigns'); // Adjust the path as necessary
 
 // Middleware to authorize user access to a specific campaign
@@ -14,8 +12,8 @@ const authorizeCampaign = async (req, res, next) => {
       return res.status(404).json({ message: 'Campaign not found.' });
     }
 
-    // Check if the authenticated user is the owner of the campaign
-    if (campaign.owner.toString() !== req.user.id) {
+    // Check if the authenticated orphanage user is the owner of the campaign
+    if (campaign.orphanage.toString() !== req.user.id) {
       return res.status(403).json({ message: 'You are not authorized to access this campaign.' });
     }
 

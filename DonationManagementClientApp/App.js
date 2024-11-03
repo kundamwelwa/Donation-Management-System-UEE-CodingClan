@@ -1,33 +1,36 @@
 import * as React from 'react';
 import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack'; // Import Stack Navigator
-import { Donor_dashboard, Home, Profile } from './screens/';
-import Login_choice from './screens/Login_choice';
-import Orphanage_Signup from './screens/Orphanage_Signup';
-import Donor_Login from './screens/Donor_Login';
-import Orphanage_Login from './screens/Orphanage_Login';
-import Orphanage_profile from './screens/Orphanage_profile';
-import Donation from './screens/Donation';
-import Orphanage_Feed from './screens/Orphanage_Feed';
-import Donor_Profile from './screens/Donor_Profile';
-import Donor_Notifications from './screens/Donor_Notifications';
-import Project_Listing from './screens/Project_Listing';
-import Donor_Signup from './screens/Donor_Signup';
-import Project_Details from './screens/Project_Details';
-import Splash from './screens/Splash';
-import Orphanage_Dashboard from './screens/Orphanage_Dashboard';
+import { createStackNavigator } from '@react-navigation/stack';
+import { 
+  Donor_dashboard,
+  Splash,
+  Login_choice,
+  Donor_Login,
+  Donor_Signup,
+  Donation,
+  Campaigns,
+  Orphanage_Login,
+  Orphanage_Signup,
+  Donor_Notifications,
+  Orphanage_Dashboard,
+  Orphanage_profile,
+  ProjectListing,
+  Orphanage_Feed,
+  Donor_Profile,
+  Project_Details, 
+} from './screens';  // Import all screens from index.js
 
-const Stack = createStackNavigator(); // Create Stack instance
+const Stack = createStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
-          headerShown: false
+          headerShown: false,
         }}
-        initialRouteName={'Splash'}
+        initialRouteName="Splash"
       >
         <Stack.Screen name="Splash" component={Splash} />
         <Stack.Screen name="Login_choice" component={Login_choice} />
@@ -38,13 +41,13 @@ export default function App() {
         <Stack.Screen name="Orphanage_Signup" component={Orphanage_Signup} />
         <Stack.Screen name="Donor_Notifications" component={Donor_Notifications} />
         <Stack.Screen name="Orphanage_Dashboard" component={Orphanage_Dashboard} />
+        <Stack.Screen name="Campaigns" component={Campaigns} />
         <Stack.Screen name="Orphanage_profile" component={Orphanage_profile} />
         <Stack.Screen name="Donor_dashboard" component={Donor_dashboard} />
-        <Stack.Screen name="Project_Listing" component={Project_Listing} />
+        <Stack.Screen name="ProjectListing" component={ProjectListing} />
         <Stack.Screen name="Orphanage_Feed" component={Orphanage_Feed} />
         <Stack.Screen name="Donor_Profile" component={Donor_Profile} />
         <Stack.Screen name="Project_Details" component={Project_Details} />
-
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -54,6 +57,6 @@ const styles = StyleSheet.create({
   appContainer: {
     flex: 1,
     padding: 50,
-    backgroundColor: '#3A74CB'
-  }
+    backgroundColor: '#3A74CB',
+  },
 });

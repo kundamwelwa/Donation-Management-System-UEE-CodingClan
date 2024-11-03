@@ -1,34 +1,73 @@
 const mongoose = require('mongoose');
 const Campaign = require('../models/Campaigns');
 const Donation = require('../models/Donations');
+const multer = require('multer');
 
 // Create a new campaign (Orphanage only)
-exports.createCampaign = async (req, res) => {
+exports.create = async (req, res) => {
   try {
-    const { name, description, goal } = req.body;
+    // Extract campaign details from the request body
+    const { name, description, targetAmount, category, startDate, endDate, location } = req.body;
+
+    // Check if all required fields are present
+    if (!name || !description || !targetAmount || !category || !startDate || !endDate || !location) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Check if an image was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: 'Image is required' });
+    }
+
+    // Handle the imageUri based on multer
+    const imageUri = req.file.path; // Assuming multer saves the file and provides the path
 
     const newCampaign = new Campaign({
       name,
       description,
-      goal,
-      status: 'ongoing', // Set default status
+      targetAmount,
+      currentAmount: 0, // Default to 0 when creating
+      status: 'active', // Set default status
+      category,
+      startDate,
+      endDate,
+      location,
+      imageUri,
       orphanage: req.user.id, // Assuming the orphanage ID is available in the token
     });
 
+    // Save the campaign to the database
     const savedCampaign = await newCampaign.save();
-    res.status(201).json(savedCampaign);
+
+    // Return only necessary details
+    res.status(201).json({
+      id: savedCampaign._id,
+      name: savedCampaign.name,
+      description: savedCampaign.description,
+      targetAmount: savedCampaign.targetAmount,
+      currentAmount: savedCampaign.currentAmount,
+      category: savedCampaign.category,
+      startDate: savedCampaign.startDate,
+      endDate: savedCampaign.endDate,
+      location: savedCampaign.location,
+      status: savedCampaign.status,
+      imageUri: savedCampaign.imageUri, // Include the imageUri in the response
+    });
   } catch (error) {
     console.error('Error creating campaign:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
+
+
+
 // Get all campaigns
 exports.getAllCampaigns = async (_req, res) => {
   try {
     const campaigns = await Campaign.find()
       .populate('orphanage', 'orphanageName coverPhoto') // Populate orphanage details
-      .select('name description goal status orphanage');
+      .select('name description targetAmount currentAmount status orphanage category startDate endDate imageUri');
 
     if (campaigns.length === 0) {
       return res.status(200).json({ message: 'No campaigns available yet.' });
@@ -44,9 +83,9 @@ exports.getAllCampaigns = async (_req, res) => {
 // Get all ongoing campaigns (for Donors and Orphanages)
 exports.getOngoingCampaigns = async (_req, res) => {
   try {
-    const ongoingCampaigns = await Campaign.find({ status: 'ongoing' })
+    const ongoingCampaigns = await Campaign.find({ status: 'active' })
       .populate('orphanage', 'orphanageName coverPhoto') // Populate orphanage details
-      .select('name description goal status orphanage');
+      .select('name description targetAmount currentAmount status orphanage category startDate endDate imageUri');
 
     if (ongoingCampaigns.length === 0) {
       return res.status(200).json({ message: 'No ongoing campaigns available.' });
@@ -113,7 +152,7 @@ exports.getDonatedCampaigns = async (req, res) => {
 
     // Fetch donations made by the donor and populate the campaign
     const donations = await Donation.find({ donor: userId })
-      .populate('campaign', 'name description goal status orphanage coverPhoto');
+      .populate('campaign', 'name description targetAmount currentAmount status orphanage category startDate endDate imageUri');
 
     if (donations.length === 0) {
       return res.status(200).json({ message: 'You have not donated to any campaigns yet.' });
@@ -139,4 +178,3 @@ exports.getDonatedCampaigns = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-

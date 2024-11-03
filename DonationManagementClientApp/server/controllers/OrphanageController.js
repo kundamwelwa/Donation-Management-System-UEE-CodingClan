@@ -1,12 +1,16 @@
 const Orphanage = require('../models/Orphanages');
 const Donation = require('../models/Donations');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 
 // Function to generate JWT token for orphanages
 const generateOrphanageToken = (orphanageId) => {
   const secret = process.env.JWT_SECRET || 'default_secret'; // Replace with your actual secret
   return jwt.sign({ id: orphanageId }, secret, { expiresIn: '1d' });
 };
+
+// Helper function to validate ObjectId
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 // Orphanage Signup
 exports.Orphanagesignup = async (req, res) => {
@@ -61,82 +65,88 @@ exports.Orphanagesignup = async (req, res) => {
 };
 
 // Orphanage Login
-exports.OrphanageLogin = async (req, res) => {
+exports.Orphanagelogin = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Check if email and password are provided
+    console.log('Orphanagelogin endpoint hit');
+
     if (!email || !password) {
-      console.log('Login Error: Email and password are required.');
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Normalize email
     const normalizedEmail = email.toLowerCase();
-
-    // Find orphanage by email
     const orphanage = await Orphanage.findOne({ email: normalizedEmail });
+    
     if (!orphanage) {
-      console.log(`Login Error: No orphanage found with email ${normalizedEmail}.`);
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
-    // Compare passwords using the model's method
     const isMatch = await orphanage.comparePassword(password);
     if (!isMatch) {
-      console.log(`Login Error: Password mismatch for orphanage ${normalizedEmail}.`);
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
-    // Generate JWT token
     const token = generateOrphanageToken(orphanage._id);
-    console.log(`JWT Token generated for orphanage ${orphanage.email}: ${token}`);
-
-    // Respond with token and orphanage information
+    
+    // Include orphanage ID in the response
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      name: orphanage.orphanageName,
+      id: orphanage._id // Include orphanage ID in the response
+    });
   } catch (error) {
     console.error('Error during orphanage login:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-
 // Get Orphanage Profile
 exports.getOrphanage = async (req, res) => {
   try {
-    const orphanageId = req.orphanage.id; // Assuming middleware attaches orphanage info to req
+    const orphanageId = req.user.id; // Assuming req.user.id holds the logged-in orphanage ID from token
 
-    // Fetch orphanage by ID
-    const orphanage = await Orphanage.findById(orphanageId).select('-password'); // Exclude password
-
-    if (!orphanage) {
-      console.log(`GetOrphanage Error: No orphanage found with ID ${orphanageId}.`);
-      return res.status(404).json({ message: 'Orphanage not found.' });
+    // Check that the orphanage ID is valid
+    if (!orphanageId || !isValidObjectId(orphanageId)) {
+      return res.status(400).json({ message: 'Invalid orphanage ID format' });
     }
 
-    res.json({
+    // Retrieve orphanage details by ID
+    const orphanage = await Orphanage.findById(orphanageId);
+    
+    if (!orphanage) {
+      console.log(`GetOrphanage Error: No orphanage found with ID ${orphanageId}.`);
+      return res.status(404).json({ message: 'Orphanage not found' });
+    }
+
+    // Return the orphanage’s name, address, and children count
+    res.status(200).json({
       name: orphanage.name,
-      description: orphanage.description,
-      location: orphanage.location, // Include other relevant fields if needed
-      contactInfo: orphanage.contactInfo,
-      // Add any other fields you want to return
+      physicalAddress: orphanage.physicalAddress,
+      numberOfChildren: orphanage.numberOfChildren,
     });
   } catch (error) {
-    console.error('Error fetching orphanage profile:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error fetching orphanage:', error);
+    res.status(500).json({ message: 'Failed to fetch orphanage details', error: error.message });
   }
 };
 
 
+
+
 // Get All Orphanages
-exports.getAllOrphanages = async (req, res) => {
+exports.getAllOrphanages = async (_req, res) => {
   try {
-    const orphanages = await Orphanage.find().select('orphanageName coverPhoto physicalAddress numberOfChildren'); // Ensure fields are included
+    console.log('getAllOrphanages endpoint hit');
+
+    const orphanages = await Orphanage.find().select('orphanageName physicalAddress numberOfChildren');
 
     if (orphanages.length === 0) {
       return res.status(200).json({ message: 'No orphanages registered yet.' });
     }
 
-    res.json(orphanages);
+    res.status(200).json(orphanages);
   } catch (error) {
     console.error('Error fetching all orphanages:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -146,9 +156,10 @@ exports.getAllOrphanages = async (req, res) => {
 // Get Donated Orphanages
 exports.getDonatedOrphanages = async (req, res) => {
   try {
+    console.log('getDonatedOrphanages endpoint hit');
+
     const userId = req.user.id;
 
-    // Fetch donations made by the donor and populate the campaign's orphanage
     const donations = await Donation.find({ donor: userId })
       .populate({
         path: 'campaign',
@@ -159,7 +170,6 @@ exports.getDonatedOrphanages = async (req, res) => {
       return res.status(200).json({ message: 'You have not donated to any orphanages yet.' });
     }
 
-    // Extract orphanages from the donations
     const donatedOrphanagesMap = {};
     donations.forEach(donation => {
       if (donation.campaign && donation.campaign.orphanage) {
@@ -169,60 +179,27 @@ exports.getDonatedOrphanages = async (req, res) => {
 
     const donatedOrphanages = Object.values(donatedOrphanagesMap);
 
-    if (donatedOrphanages.length === 0) {
-      return res.status(200).json({ message: 'No orphanages found for your donations.' });
-    }
-
-    res.json(donatedOrphanages);
+    res.status(200).json(donatedOrphanages);
   } catch (error) {
     console.error('Error fetching donated orphanages:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-// Get Orphanage By ID
-exports.getOrphanageById = async (req, res) => {
-  try {
-    const orphanageId = req.params.id;
-
-    // Validate the orphanage ID format (assuming it's a MongoDB ObjectId)
-    if (!orphanageId || !isValidObjectId(orphanageId)) {
-      return res.status(400).json({ message: 'Invalid orphanage ID format' });
-    }
-
-    const orphanage = await Orphanage.findById(orphanageId); // Fetch by ID
-    if (!orphanage) {
-      return res.status(404).json({ message: 'Orphanage not found' });
-    }
-
-    res.status(200).json(orphanage);
-  } catch (error) {
-    console.error('Error fetching orphanage by ID:', error);
-    res.status(500).json({ message: 'Failed to fetch orphanage details', error: error.message });
-  }
-};
-
-// Helper function to validate ObjectId (if using MongoDB)
-const isValidObjectId = (id) => {
-  const ObjectId = require('mongoose').Types.ObjectId;
-  return ObjectId.isValid(id);
-};
-
-
-
 // Get Orphanages Associated with the Donor
 exports.getOrphanagesForDonor = async (req, res) => {
   try {
+    console.log('getOrphanagesForDonor endpoint hit');
+
     const userId = req.user.id;
 
-    // Fetch orphanages related to the donor
-    const orphanages = await Orphanage.find({ donors: userId }); // Assuming 'donors' is an array of donor IDs
+    const orphanages = await Orphanage.find({ donors: userId });
 
     if (orphanages.length === 0) {
       return res.status(200).json({ message: 'No orphanages found for this donor' });
     }
 
-    res.json(orphanages);
+    res.status(200).json(orphanages);
   } catch (error) {
     console.error('Error fetching orphanages:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

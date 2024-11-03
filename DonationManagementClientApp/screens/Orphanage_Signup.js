@@ -37,7 +37,7 @@ const Orphanage_Signup = ({ navigation }) => {
   const handleSignUp = async (values) => {
     setIsSubmitting(true);
 
-    const hardcodedUrl = 'http://192.168.8.106:5001/api'; // Fallback URL
+    const hardcodedUrl = 'http://192.168.224.200:5001/api'; // Fallback URL
     const apiUrl = API_URL || hardcodedUrl;
 
     console.log('Using API URL:', apiUrl);

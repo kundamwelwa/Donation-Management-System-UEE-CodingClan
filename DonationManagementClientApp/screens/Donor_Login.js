@@ -26,7 +26,7 @@ const Donor_Login = ({ navigation }) => {
   const handleLogin = async (values) => {
     setIsSubmitting(true);
     try {
-      const hardcodedUrl = 'http://192.168.8.106:5001/api'; 
+      const hardcodedUrl = 'http://192.168.224.200:5001/api'; 
       const apiUrl = API_URL || hardcodedUrl;
 
       console.log('Using API URL:', apiUrl);

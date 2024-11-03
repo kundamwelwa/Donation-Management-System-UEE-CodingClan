@@ -1,5 +1,3 @@
-// middlewares/authorizeCampaign.js
-
 const Campaign = require('../models/Campaigns');
 const Orphanage = require('../models/Orphanages');
 const mongoose = require('mongoose');
@@ -9,15 +7,15 @@ const mongoose = require('mongoose');
  */
 const authorizeCampaign = async (req, res, next) => {
   try {
-    const userId = req.user.id;
-    const campaignId = req.params.id;
+    const userId = req.user.id; // Get the authenticated user's ID
+    const campaignId = req.params.id; // Get the campaign ID from request parameters
 
     // Validate campaign ID
     if (!mongoose.Types.ObjectId.isValid(campaignId)) {
       return res.status(400).json({ message: 'Invalid campaign ID.' });
     }
 
-    // Fetch the orphanage associated with the user
+    // Fetch the orphanage associated with the authenticated user
     const orphanage = await Orphanage.findOne({ user: userId });
 
     if (!orphanage) {
@@ -31,10 +29,10 @@ const authorizeCampaign = async (req, res, next) => {
       return res.status(403).json({ message: 'You are not authorized to modify this campaign.' });
     }
 
-    // Attach campaign to request object for further use if needed
+    // Attach the campaign to the request object for further use if needed
     req.campaign = campaign;
 
-    next();
+    next(); // Proceed to the next middleware or route handler
   } catch (error) {
     console.error('Authorization Error:', error);
     res.status(500).json({ message: 'Server error during authorization.', error: error.message });

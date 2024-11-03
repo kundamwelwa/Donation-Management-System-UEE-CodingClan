@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
@@ -19,11 +19,13 @@ const LoginSchema = Yup.object().shape({
 
 const Orphanage_Login = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false); // Loading state
 
   const handleLogin = async (values) => {
+    setLoading(true); // Start loading
     try {
-      const apiUrl = 'http://192.168.8.106:5001/api';
-      
+      const apiUrl = 'http://192.168.224.200:5001/api';
+
       console.log('Using API URL:', apiUrl);
       console.log('Login request payload:', values);
 
@@ -33,30 +35,34 @@ const Orphanage_Login = ({ navigation }) => {
       console.log('Full login response data:', response.data);
 
       const token = response.data.token;
-      const orphanageData = response.data.orphanage || {};
-      const name = orphanageData.name || orphanageData.contactName || response.data.user?.name || response.data.fullName; // Check multiple fields
+      const name = response.data.name; // Extract name directly from the response
+      const orphanageID = response.data.id; // Ensure you extract the ID
 
       // Log extracted values for debugging
       console.log('Extracted Token:', token);
       console.log('Extracted Name:', name);
+      console.log('Extracted Orphanage ID:', orphanageID); // Log the ID
 
-      if (!token || !name) {
+      if (!token || !name || !orphanageID) {
         throw new Error('User data is incomplete or missing.');
       }
 
       // Store the token and user name in AsyncStorage
       await AsyncStorage.setItem('token', token);
-      await AsyncStorage.setItem('userName', name);
+      await AsyncStorage.setItem('orphanageName', name); // Use the extracted name
+      await AsyncStorage.setItem('orphanageID', orphanageID); // Store the orphanage ID
 
       Alert.alert('Login Successful', 'You have logged in successfully.');
-      navigation.navigate('Orphanage_Dashboard', { userName: name });
+      navigation.navigate('Orphanage_Dashboard', { name: name }); // Pass the name to the next screen
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'An unexpected error occurred. Please try again.';
       console.error('Login Error:', errorMessage);
       Alert.alert('Login Failed', errorMessage);
+    } finally {
+      setLoading(false); // End loading
     }
   };
-  
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Orphanage Login</Text>
@@ -94,15 +100,19 @@ const Orphanage_Login = ({ navigation }) => {
                 value={values.password}
               />
               <TouchableOpacity onPress={() => setPasswordVisible(!passwordVisible)} style={styles.eyeIcon}>
-                <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={20}  />
+                <Icon name={passwordVisible ? "visibility" : "visibility-off"} size={20} />
               </TouchableOpacity>
             </View>
             {errors.password && touched.password ? (
               <Text style={styles.errorText}>{errors.password}</Text>
             ) : null}
 
-            <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-              <Text style={styles.buttonText}>Login</Text>
+            <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Login</Text>
+              )}
             </TouchableOpacity>
 
             <View style={styles.optionsContainer}>

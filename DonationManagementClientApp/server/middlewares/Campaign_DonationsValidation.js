@@ -1,16 +1,14 @@
-// middlewares/validation.js
-
 const { body, validationResult } = require('express-validator');
 
 /**
  * Validate Campaign Creation
  */
 const validateCampaignCreation = [
-  body('title')
+  body('name')
     .notEmpty()
-    .withMessage('Title is required.')
+    .withMessage('Name is required.')
     .isString()
-    .withMessage('Title must be a string.'),
+    .withMessage('Name must be a string.'),
   body('description')
     .notEmpty()
     .withMessage('Description is required.')
@@ -25,7 +23,6 @@ const validateCampaignCreation = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Return first error message
       return res.status(400).json({ errors: errors.array() });
     }
     next();
@@ -36,10 +33,10 @@ const validateCampaignCreation = [
  * Validate Campaign Update
  */
 const validateCampaignUpdate = [
-  body('title')
+  body('name')
     .optional()
     .isString()
-    .withMessage('Title must be a string.'),
+    .withMessage('Name must be a string.'),
   body('description')
     .optional()
     .isString()
@@ -56,7 +53,6 @@ const validateCampaignUpdate = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Return first error message
       return res.status(400).json({ errors: errors.array() });
     }
     next();
@@ -86,7 +82,6 @@ const validateDonationCreation = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Return first error message
       return res.status(400).json({ errors: errors.array() });
     }
     next();
@@ -106,7 +101,6 @@ const validateDonationUpdate = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Return first error message
       return res.status(400).json({ errors: errors.array() });
     }
     next();
