@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const orphanageRoutes = require('./routes/orphanageAuthRoutes');
 const campaignRoutes = require('./routes/CampaignRoutes');
 const donationRoutes = require('./routes/DonationRoutes');
+const projectRoutes = require('./routes/CreateProjectRoutes');
 
 const { errorHandler } = require('./middlewares/errorHandler');
 
@@ -35,7 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/Orphanages', orphanageRoutes);
 app.use('/api/campaigns', campaignRoutes);
 app.use('/api/donations', donationRoutes);
-
+app.use('/api/projects', projectRoutes);
 // Error handling middleware (should be placed after all routes)
 app.use(errorHandler);
 

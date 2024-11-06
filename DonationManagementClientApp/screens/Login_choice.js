@@ -1,9 +1,37 @@
-import React, { useRef } from "react";
-import { Text, TouchableOpacity, StyleSheet, View, StatusBar, Animated, Easing } from "react-native";
-import { FontAwesome } from '@expo/vector-icons'; // Make sure to install expo-font-awesome
+import React, { useRef, useEffect, useState } from "react";
+import { Text, TouchableOpacity, StyleSheet, View, StatusBar, Animated, Dimensions, ImageBackground } from "react-native";
+import { FontAwesome } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useFonts } from 'expo-font';
+import AppLoading from 'expo-app-loading';
+
+const { width, height } = Dimensions.get('window');
+
+const scale = size => (width / 375) * size; // Scaling function
+const scaleHeight = size => (height / 667) * size; // Adjusted height scale
 
 const LoginChoice = (props) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
+  const headerAnim = useRef(new Animated.Value(0)).current; // Header animation
+
+  const [fontsLoaded] = useFonts({
+    Montserrat: require('../assets/fonts/MontserratAlternates-Bold.ttf'), // Adjust the path as needed
+  });
+
+  // Handle loading state
+  const [loading, setLoading] = useState(!fontsLoaded);
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      setLoading(false);
+      // Animate the header on mount
+      Animated.timing(headerAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [fontsLoaded]); // Only run this effect when fontsLoaded changes
 
   const navigateToLogin = (role) => {
     if (role === 'Donor') {
@@ -15,7 +43,7 @@ const LoginChoice = (props) => {
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.95, 
+      toValue: 0.95,
       useNativeDriver: true,
     }).start();
   };
@@ -29,37 +57,51 @@ const LoginChoice = (props) => {
     }).start();
   };
 
+  // Display AppLoading if fonts are not loaded
+  if (loading) {
+    return <AppLoading />;
+  }
+
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent
-      />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <ImageBackground 
+        source={require('../assets/Images/Loginchoice3.jpg')}
+        style={styles.image}
+      >
+        <LinearGradient
+          colors={['rgba(0,0,0,0.9)', 'rgba(0,0,0,0.9)', 'rgba(0,0,0,0)']}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 0, y: 0.4 }}
+          style={styles.gradientOverlay}
+        >
+          <Animated.View style={[styles.headerContainer, { opacity: headerAnim }]}>
+            <Text style={styles.headerText}>How do you want to use this app?</Text>
+          </Animated.View>
 
-      <View style={styles.card}>
-        <Text style={styles.headerText}>Choose Login Role</Text>
+          <View style={styles.buttonContainer}>
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+              <TouchableOpacity 
+                style={styles.button} 
+                onPressIn={handlePressIn} 
+                onPressOut={handlePressOut} 
+                onPress={() => navigateToLogin('Donor')}
+              >
+                <Text style={styles.buttonText}>Login as a Donor</Text>
+              </TouchableOpacity>
 
-        <Animated.View style={[styles.buttonContainer, { transform: [{ scale: scaleAnim }] }]}>
-          <TouchableOpacity 
-            style={styles.button} 
-            onPressIn={handlePressIn} 
-            onPressOut={handlePressOut} 
-            onPress={() => navigateToLogin('Donor')}>
-            <FontAwesome name="heart" size={24} color="#F4F6FF" />
-            <Text style={styles.buttonText}>Login as a Donor</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.button} 
-            onPressIn={handlePressIn} 
-            onPressOut={handlePressOut} 
-            onPress={() => navigateToLogin('Orphanage')}>
-            <FontAwesome name="home" size={24} color="#F4F6FF" />
-            <Text style={styles.buttonText}>Login as an Orphanage</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
+              <TouchableOpacity 
+                style={styles.button} 
+                onPressIn={handlePressIn} 
+                onPressOut={handlePressOut} 
+                onPress={() => navigateToLogin('Orphanage')}
+              >
+                <Text style={styles.buttonText}>Login as an Orphanage</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+        </LinearGradient>
+      </ImageBackground>
     </View>
   );
 };
@@ -67,28 +109,33 @@ const LoginChoice = (props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F4F6FF", // White background for a clean look
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 20,
+    justifyContent: "flex-end",
+    paddingHorizontal: scale(0),
   },
-  card: {
-    width: '90%',
-    padding: 30,
-    backgroundColor: "#78B7D0", // Light grey background for the card
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 10, 
-    alignItems: "center",
+  image: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  gradientOverlay: {
+    padding: scale(20),
+    borderTopLeftRadius: scale(20),
+    borderTopRightRadius: scale(20),
+  },
+  headerContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // Dark transparent background
+    paddingVertical: scale(40),
+    paddingHorizontal: scale(60),
+    borderRadius: scale(10),
+    alignSelf: 'center',
+    marginBottom: scaleHeight(270),
   },
   headerText: {
-    fontSize: 26,
+    fontSize: scale(28),
+    fontFamily: 'Montserrat', // Custom font
     fontWeight: "bold",
-    color: "#F4F6FF", // Dark grey for text
-    marginBottom: 30,
+    paddingBottom: scale(1),
+    color: "#F4F6FF",
+    textAlign: 'center',
   },
   buttonContainer: {
     width: '100%',
@@ -96,24 +143,25 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    paddingVertical: 15,
-    marginVertical: 10,
-    backgroundColor: "#071952", 
-    borderRadius: 30,
+    paddingVertical: scale(15),
+    marginVertical: scaleHeight(10),
+    backgroundColor: "#071952",
+    borderRadius: scale(15),
     alignItems: "center",
     justifyContent: "center",
-    flexDirection: 'row', // Align icon and text
-    shadowColor: "#6200EE", 
+    flexDirection: 'row',
+    shadowColor: "#6200EE",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 6,
   },
   buttonText: {
-    fontSize: 18,
-    color: "#F4F6FF", // Black color for button text
+    fontSize: scale(18),
+    color: "#F4F6FF",
     fontWeight: "bold",
-    marginLeft: 10, // Space between icon and text
+    textAlign: 'center', // Center the text horizontally
+    flex: 1, // Allow the text to expand and fill the button space
   },
 });
 

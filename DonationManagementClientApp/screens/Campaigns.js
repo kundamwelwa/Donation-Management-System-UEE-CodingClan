@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   StatusBar,
   Dimensions,
@@ -12,6 +11,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +21,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
+const scale = size => (width / 375) * size; // Adjust the base width as needed
+const scaleHeight = size => (height / 667) * size; // Adjust the base height as needed
 
 const Campaigns = () => {
   const [campaignName, setCampaignName] = useState('');
@@ -37,25 +39,30 @@ const Campaigns = () => {
   const [loading, setLoading] = useState(false);
 
   const handleImagePick = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'You need to grant permission to access the image library.');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission required', 'Please grant permission to access the image library.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
 
-    if (result && !result.canceled && result.assets && result.assets.length > 0) {
-      const selectedAsset = result.assets[0];
-      setImageUri(selectedAsset.uri);
-      setImageName(selectedAsset.uri.split('/').pop());
-    } else {
-      console.log('Image picker was canceled or no asset was returned.');
+      if (result && !result.canceled && result.assets && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+        setImageUri(selectedAsset.uri);
+        setImageName(selectedAsset.uri.split('/').pop());
+      } else {
+        console.log('Image picker canceled or no asset returned.');
+      }
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
@@ -64,7 +71,7 @@ const Campaigns = () => {
       Alert.alert('Error', 'Please fill in all the fields');
       return;
     }
-
+  
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
@@ -72,7 +79,7 @@ const Campaigns = () => {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data',
       };
-
+  
       const formData = new FormData();
       formData.append('name', campaignName);
       formData.append('description', description);
@@ -81,40 +88,40 @@ const Campaigns = () => {
       formData.append('startDate', startDate.toISOString());
       formData.append('endDate', endDate.toISOString());
       formData.append('location', location);
-
+  
       if (imageUri) {
         const type = imageUri.split('.').pop();
-        if (type && (type === 'jpg' || type === 'jpeg' || type === 'png')) {
-          formData.append('image', {
-            uri: imageUri,
-            name: imageName || `image.${type}`,
-            type: `image/${type === 'jpg' ? 'jpeg' : type}`,
-          });
-        } else {
-          Alert.alert('Error', 'Invalid image format');
-          setLoading(false);
-          return;
-        }
+        formData.append('image', {
+          uri: imageUri,
+          name: imageName || `image.${type}`,
+          type: `image/${type === 'jpg' ? 'jpeg' : type}`,
+        });
       }
-
-      console.log('FormData before submission:', formData);
-
-      const apiUrl = API_URL || 'http://192.168.224.200:5001/api';
-      const response = await axios.post(`${apiUrl}/campaigns/create`, formData, { headers });
-      console.log('Campaign created response:', response);
-      Alert.alert('Success', 'Campaign created successfully!');
-      resetForm();
+  
+      const apiUrl = API_URL || 'http://192.168.179.200:5001/api';
+      const response = await axios.post(`${apiUrl}/campaigns/create`, formData, { headers, timeout: 10000 });
+  
+      if (response.status === 200 || response.status === 201) {
+        Alert.alert('Success', 'Campaign created successfully!');
+        resetForm();
+      } else {
+        Alert.alert('Warning', 'Campaign created, but response status not as expected.');
+      }
     } catch (error) {
       console.error('Error creating campaign:', error);
-      if (error.response && error.response.data && error.response.data.message) {
-        Alert.alert('Error', error.response.data.message);
+      if (error.response && error.response.data) {
+        console.error('Response data:', error.response.data);
+        Alert.alert('Error', error.response.data.message || 'Failed to create campaign.');
+      } else if (error.code === 'ECONNABORTED') {
+        Alert.alert('Error', 'Request timed out. Please try again.');
       } else {
-        Alert.alert('Error', 'Failed to create campaign. Please try again.');
+        Alert.alert('Error', 'Failed to create campaign. Please check your network and try again.');
       }
     } finally {
       setLoading(false);
     }
   };
+  
 
   const resetForm = () => {
     setCampaignName('');
@@ -144,36 +151,28 @@ const Campaigns = () => {
           />
         </View>
 
-        <View style={[styles.inputContainer, { height: 120 }]}>
-          <TextInput
-            style={[styles.input, { textAlignVertical: 'top', height: 100 }]}
-            placeholder="Description"
-            multiline
-            value={description}
-            onChangeText={setDescription}
-          />
-        </View>
+        <TextInput
+          style={[styles.inputContainer, { height: 100 }]}
+          placeholder="Description"
+          multiline
+          value={description}
+          onChangeText={setDescription}
+        />
 
-        <View style={styles.inputContainer}>
-          <Icon name="dollar" size={20} color="#555" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Target Amount"
-            keyboardType="numeric"
-            value={targetAmount}
-            onChangeText={setTargetAmount}
-          />
-        </View>
+        <TextInput
+          style={styles.inputContainer}
+          placeholder="Target Amount"
+          keyboardType="numeric"
+          value={targetAmount}
+          onChangeText={setTargetAmount}
+        />
 
-        <View style={styles.inputContainer}>
-          <Icon name="tags" size={20} color="#555" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Category"
-            value={category}
-            onChangeText={setCategory}
-          />
-        </View>
+        <TextInput
+          style={styles.inputContainer}
+          placeholder="Category"
+          value={category}
+          onChangeText={setCategory}
+        />
 
         <TouchableOpacity onPress={() => setShowStartDatePicker(true)} style={styles.datePicker}>
           <Icon name="calendar" size={20} color="#555" />
@@ -207,22 +206,20 @@ const Campaigns = () => {
           />
         )}
 
-        <View style={styles.inputContainer}>
-          <Icon name="map-marker" size={20} color="#555" style={styles.icon} />
-          <TextInput
-            style={styles.input}
-            placeholder="Location"
-            value={location}
-            onChangeText={setLocation}
-          />
-        </View>
+        <TextInput
+          style={styles.inputContainer}
+          placeholder="Location"
+          value={location}
+          onChangeText={setLocation}
+        />
 
         <TouchableOpacity onPress={handleImagePick} style={styles.uploadButton}>
           <Icon name="camera" size={20} color="#555" />
           <Text style={styles.uploadText}>{imageUri ? 'Change Image' : 'Upload Image'}</Text>
         </TouchableOpacity>
-        {imageUri && <Text style={styles.imageName}>{imageName}</Text>}
-        {imageUri && <Image source={{ uri: imageUri }} style={styles.imagePreview} />}
+        {imageUri && (
+          <Image source={{ uri: imageUri }} style={styles.imagePreview} />
+        )}
 
         {loading ? (
           <ActivityIndicator size="large" color="#2B3467" style={styles.loadingIndicator} />
@@ -240,88 +237,84 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8f9fa',
+    marginTop: scale(20),
   },
   scrollContainer: {
-    padding: 20,
+    padding: scale(20),
   },
   heading: {
-    textAlign: 'center',
-    fontSize: 24,
+    fontSize: scale(30),
     fontWeight: 'bold',
+    
     color: '#333',
-    marginBottom: 15,
+    marginBottom: scale(30),
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#ffffff',
-    padding: 10,
-    borderRadius: 8,
-    marginVertical: 10,
+    padding: scale(10),
+    borderRadius: scale(8),
+    marginVertical: scale(10),
     borderWidth: 1,
     borderColor: '#ddd',
   },
   icon: {
-    marginRight: 10,
+    marginRight: scale(10),
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: scale(16),
   },
   datePicker: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    padding: scale(15),
     backgroundColor: '#ffffff',
-    borderRadius: 8,
-    marginVertical: 10,
+    borderRadius: scale(8),
+    marginVertical: scale(10),
     borderColor: '#ddd',
     borderWidth: 1,
   },
   dateText: {
-    marginLeft: 10,
-    fontSize: 16,
+    marginLeft: scale(10),
+    fontSize: scale(16),
   },
   uploadButton: {
-    alignContent: width * 0.05,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    padding: scale(15),
     backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    marginVertical: 10,
+    borderRadius: scale(8),
+    marginVertical: scale(10),
   },
   uploadText: {
-    marginLeft: 10,
-    fontSize: 16,
+    marginLeft: scale(10),
+    fontSize: scale(16),
     color: '#555',
-  },
-  imageName: {
-    marginTop: 10,
-    color: '#555',
-    fontSize: 14,
   },
   imagePreview: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
-    marginTop: 10,
+    height: scaleHeight(200), // Use scaleHeight for height
+    borderRadius: scale(8),
+    marginTop: scale(10),
   },
   submitButton: {
     backgroundColor: '#2B3467',
-    padding: 15,
-    borderRadius: 8,
+    padding: scale(15),
+    borderRadius: scale(8),
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: scale(20),
   },
   submitButtonText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: scale(18),
     fontWeight: 'bold',
   },
   loadingIndicator: {
-    marginTop: 20,
+    marginTop: scale(20),
   },
 });
+
 
 export default Campaigns;

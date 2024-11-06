@@ -1,6 +1,6 @@
 // controllers/donationController.js
 
-const Donation = require('../models/Donations');
+const Donation = require('../models/ProjectListing');
 const Campaign = require('../models/Campaigns');
 
 /**

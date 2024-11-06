@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, StatusBar, Alert, ImageBackground, Animated, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, StatusBar, Alert, ImageBackground, Animated, ActivityIndicator, ScrollView } from 'react-native';
 import { FAB } from 'react-native-paper';
 import { FontAwesome } from '@expo/vector-icons';
 import axios from 'axios';
@@ -7,22 +7,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
+const scale = size => (width / 375) * size;
+const scaleHeight = size => (height / 667) * size;
 const userCardBackgroundImage = require('../assets/Images/UserCardBackground.jpg');
+const completedProjects = [
+  { id: 1, title: 'LivingStone Tour', image: require('../assets/Images/Orphanage1.jpg') },
+  { id: 2, title: 'Children Outreach', image: require('../assets/Images/Orphanage2.jpg') },
+  { id: 3, title: 'School Building', image: require('../assets/Images/Orphanage3.jpg') },
+];
 
 const Orphanage_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home');
   const [orphanageName, setOrphanageName] = useState('');
   const [location, setLocation] = useState('');
   const [numberOfChildren, setNumberOfChildren] = useState(0);
+  const [totalDonations, setTotalDonations] = useState(0);
   const [fabOpen, setFabOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
-  const [loading, setLoading] = useState(true); // Loading state
-  const scaleValue = new Animated.Value(1); // For button animation
+  const [loading, setLoading] = useState(true);
+  const scaleValue = new Animated.Value(1);
 
   useEffect(() => {
-    let isMounted = true; // Flag to track component mounted state
+    let isMounted = true;
     const fetchData = async () => {
-      setLoading(true); // Set loading to true
+      setLoading(true);
       try {
         const token = await AsyncStorage.getItem('token');
         const orphanageID = await AsyncStorage.getItem('orphanageID');
@@ -37,29 +45,30 @@ const Orphanage_Dashboard = ({ navigation }) => {
         setOrphanageName(storedOrphanageName || 'Orphanage Name');
 
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http:/192.168.224.200:5001/api';
+        const apiUrl = API_URL || 'http:/192.168.179.200:5001/api';
 
         const userResponse = await axios.get(`${apiUrl}/Orphanages/getOrphanage`, { headers });
         const orphanageData = userResponse.data || {};
-        const { physicalAddress, numberOfChildren } = orphanageData;
+        const { physicalAddress, numberOfChildren, totalDonations } = orphanageData;
 
         if (isMounted) {
           setLocation(physicalAddress || 'Location not provided');
           setNumberOfChildren(typeof numberOfChildren === 'number' ? numberOfChildren : 'N/A');
+          setTotalDonations(totalDonations || 0);
         }
       } catch (error) {
         console.error('Error fetching data:', error.message);
         Alert.alert('Error', error.response ? error.response.data.message : error.message);
       } finally {
         if (isMounted) {
-          setLoading(false); // Set loading to false after fetching
+          setLoading(false);
         }
       }
     };
 
     fetchData();
     return () => {
-      isMounted = false; // Cleanup function to set flag when unmounted
+      isMounted = false;
     };
   }, [navigation]);
 
@@ -72,19 +81,20 @@ const Orphanage_Dashboard = ({ navigation }) => {
     );
   };
 
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-      {loading ? ( // Loading indicator
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      ) : (
-        <>
-          {/* User Card */}
-          <ImageBackground source={userCardBackgroundImage} style={styles.userCard}>
+        {/* User Card */}
+        <ImageBackground source={userCardBackgroundImage} style={styles.userCard}>
             <View style={styles.userCardOverlay} />
             <Text style={styles.userName}>{orphanageName}</Text>
             <View style={styles.userInfoContainer}>
@@ -100,6 +110,32 @@ const Orphanage_Dashboard = ({ navigation }) => {
               </View>
             </View>
           </ImageBackground>
+
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : (
+            <>
+              {/* Donations Card */}
+              <View style={styles.donationsCard}>
+                <Text style={styles.donationsText}>Total Donations:</Text>
+                <Text style={styles.donationsAmount}>${totalDonations.toLocaleString()}</Text>
+              </View>
+
+
+               
+          {/* Projects Slider */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.projectsSlider}>
+            {completedProjects.map((project) => (
+              <View key={project.id} style={styles.projectCard}>
+                <Image source={project.image} style={styles.projectImage} />
+                <Text style={styles.projectTitle}>{project.title}</Text>
+              </View>
+            ))}
+          </ScrollView>
 
           {/* FAB for Actions */}
           <FAB style={styles.fab} icon={fabOpen ? 'close' : 'plus'} onPress={toggleFab} />
@@ -155,7 +191,7 @@ const Orphanage_Dashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: height * 0.01,
+    paddingBottom: scaleHeight(15),
     backgroundColor: '#EBF4F6',
   },
   loadingContainer: {
@@ -164,17 +200,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontSize: 18,
+    fontSize: scale(18),
     color: '#007AFF',
-    marginTop: 10,
+    marginTop: scaleHeight(10),
   },
   userCard: {
     width,
-    paddingVertical: height * 0.1,
+    paddingVertical: scaleHeight(60), // Changed for responsive design
     justifyContent: 'center',
     alignItems: 'center',
-    borderBottomRightRadius: 15,
-    borderBottomLeftRadius: 15,
+    borderBottomRightRadius: scale(15),
+    borderBottomLeftRadius: scale(15),
     overflow: 'hidden',
   },
   userCardOverlay: {
@@ -182,61 +218,111 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   userName: {
-    fontSize: 24,
+    fontSize: scale(30),
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    marginBottom: 5,
+    marginBottom: scaleHeight(9),
   },
   userInfoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    paddingHorizontal: 20,
-    marginTop: 10,
+    paddingHorizontal: scale(20),
+    marginTop: scaleHeight(10),
   },
+
+  donationsCard: {
+    padding: scale(25),
+    backgroundColor: '#071952',
+    margin: scale(10),
+    borderRadius: scale(10),
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  donationsText: {
+    color: 'white',
+    fontSize: scale(16),
+  },
+  donationsAmount: {
+    color: 'white',
+    fontSize: scale(24),
+    fontWeight: 'bold',
+  },
+
+  cardHeader: {
+    padding: scale(10),
+    fontSize: scale(14),
+    fontWeight: 'bold',
+    color: '#333',
+  },
+
+  projectsSlider: {
+    marginTop: scale(20),
+    paddingHorizontal: scale(10),
+  },
+  projectCard: {
+    width: scale(150),
+    height: scale(170),
+    marginRight: scale(10),
+    borderRadius: scale(10),
+    overflow: 'hidden',
+    backgroundColor: '#C5D3E8',
+  },
+  projectImage: {
+    width: '100%',
+    height: scaleHeight(80),
+  },
+  projectTitle: {
+    padding: scale(10),
+    fontSize: scale(14),
+    fontWeight: 'bold',
+    color: '#333',
+  },
+
   infoItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   infoText: {
     color: 'white',
-    fontSize: 16,
-    marginLeft: 8,
+    fontSize: scale(16),
+    marginLeft: scale(8),
   },
   fab: {
     position: 'absolute',
-    bottom: 70,
-    right: 20,
-    backgroundColor: '#007AFF',
+    bottom: scaleHeight(80),
+    right: scale(20),
+    backgroundColor: '#C5D3E8',
   },
   fabOptions: {
     position: 'absolute',
-    bottom: 140,
-    right: 20,
-    backgroundColor: 'white',
-    borderRadius: 8,
+    bottom: scaleHeight(150),
+    right: scale(20),
+    backgroundColor: '#C5D3E8',
+    borderRadius: scale(8),
     elevation: 4,
   },
   fabOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
+    padding: scale(10),
   },
   fabOptionText: {
     color: '#021526',
-    fontSize: 16,
-    marginLeft: 8,
+    fontSize: scale(16),
+    fontWeight: 'bold',
+    marginLeft: scale(8),
   },
   bottomNav: {
     width: '100%',
     flexDirection: 'row',
     backgroundColor: '#071952',
     justifyContent: 'space-between',
-    paddingVertical: '1%',
-    paddingHorizontal: '4%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    paddingVertical: scaleHeight(5),
+    paddingHorizontal: scale(16),
+    borderTopLeftRadius: scale(15),
+    borderTopRightRadius: scale(15),
     position: 'absolute',
     bottom: 0,
   },
@@ -246,29 +332,29 @@ const styles = StyleSheet.create({
   },
   navButtonActive: {
     backgroundColor: '#021526',
-    borderRadius: 10,
-    paddingHorizontal: width * 0.02,
-    paddingVertical: height * 0.01,
+    borderRadius: scale(10),
+    paddingHorizontal: scale(8),
+    paddingVertical: scaleHeight(5),
   },
   navButtonText: {
-    fontSize: width * 0.03,
+    fontSize: scale(13),
     color: 'white',
-    marginTop: height * 0.01,
+    marginTop: scaleHeight(5),
   },
   notificationBadge: {
     position: 'absolute',
-    right: 22,
-    top: -3,
+    right: scale(22),
+    top: -scale(3),
     backgroundColor: 'red',
-    borderRadius: 10,
-    width: 15,
-    height: 15,
+    borderRadius: scale(10),
+    width: scale(15),
+    height: scale(15),
     justifyContent: 'center',
     alignItems: 'center',
   },
   notificationBadgeText: {
     color: 'white',
-    fontSize: 10,
+    fontSize: scale(10),
   },
 });
 

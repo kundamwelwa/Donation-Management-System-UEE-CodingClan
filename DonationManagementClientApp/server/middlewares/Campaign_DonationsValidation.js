@@ -62,6 +62,9 @@ const validateCampaignUpdate = [
 /**
  * Validate Donation Creation
  */
+/**
+ * Validate Donation Creation
+ */
 const validateDonationCreation = [
   body('campaignId')
     .notEmpty()
@@ -96,7 +99,7 @@ const validateDonationUpdate = [
     .notEmpty()
     .withMessage('Status is required.')
     .isIn(['pending', 'completed', 'refunded', 'canceled'])
-    .withMessage('Status must be pending, completed, refunded, or canceled.'),
+    .withMessage('Status must be either pending, completed, refunded, or canceled.'),
   // Additional validations as needed
   (req, res, next) => {
     const errors = validationResult(req);
@@ -106,7 +109,6 @@ const validateDonationUpdate = [
     next();
   },
 ];
-
 module.exports = {
   validateCampaignCreation,
   validateCampaignUpdate,

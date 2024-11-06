@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,StatusBar, Dimensions, ActivityIndicator } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
@@ -7,7 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const { width, height } = Dimensions.get('window');
-
+const scale = size => (width / 375) * size; // Assuming 375 is the base width (iPhone 6/7/8)
+const scaleHeight = size => (height / 667) * size; // Assuming 667 is the base height (iPhone 6/7/8)
 // Define validation schema using Yup
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
@@ -24,7 +25,7 @@ const Orphanage_Login = ({ navigation }) => {
   const handleLogin = async (values) => {
     setLoading(true); // Start loading
     try {
-      const apiUrl = 'http://192.168.224.200:5001/api';
+      const apiUrl = 'http://192.168.179.200:5001/api';
 
       console.log('Using API URL:', apiUrl);
       console.log('Login request payload:', values);
@@ -65,6 +66,7 @@ const Orphanage_Login = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      <StatusBar backgroundColor="#f9f9f9" barStyle="dark-content" />
       <Text style={styles.title}>Orphanage Login</Text>
       <Formik
         initialValues={{ email: '', password: '' }}
@@ -134,54 +136,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: scale(20), // Responsive padding
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: width * 0.1,
-    paddingTop: 50,
+    fontSize: scale(width * 0.1), // Responsive font size
+    paddingTop: scaleHeight(50), // Responsive padding
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 50,
+    marginBottom: scaleHeight(50), // Responsive margin
     color: '#1E201E',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f1f1',
-    padding: 5,
-    borderRadius: 12,
-    marginBottom: height * 0.02,  // Responsive margin
+    padding: scale(5), // Responsive padding
+    borderRadius: scale(12), // Responsive border radius
+    marginBottom: scaleHeight(20), // Responsive margin
   },
   input: {
     flex: 1,
-    padding: 10,
-    borderRadius: 5,
+    padding: scale(10), // Responsive padding
+    borderRadius: scale(5), // Responsive border radius
   },
   icon: {
-    paddingHorizontal: 10,
+    paddingHorizontal: scale(10), // Responsive padding
     color: '#434242',
   },
   eyeIcon: {
-    paddingHorizontal: 10,
+    paddingHorizontal: scale(10), // Responsive padding
     color: '#434242',
   },
   button: {
     backgroundColor: '#201E43',
-    padding: 15,
-    borderRadius: 15,
+    padding: scale(15), // Responsive padding
+    borderRadius: scale(15), // Responsive border radius
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: scaleHeight(10), // Responsive margin
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 24,
+    fontSize: scale(24), // Responsive font size
   },
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: scaleHeight(10), // Responsive margin
   },
   linkText: {
     color: '#4A90E2',
@@ -190,14 +192,15 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    fontSize: 12,
-    marginBottom: 10,
+    fontSize: scale(12), // Responsive font size
+    marginBottom: scaleHeight(10), // Responsive margin
   },
   togglePassword: {
     color: '#4A90E2',
     textAlign: 'right',
-    marginBottom: 10,
+    marginBottom: scaleHeight(10), // Responsive margin
   },
 });
+
 
 export default Orphanage_Login;

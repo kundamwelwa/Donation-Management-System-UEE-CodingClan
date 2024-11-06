@@ -40,8 +40,8 @@ router.delete(
   DonationController.deleteDonation
 );
 
-// Donation Routes
-router.get('/getDonationHistory', authenticateToken, DonationController.getDonationHistory); // Get Donation History
+// Get Donation History
+router.get('/getDonationHistory', authenticateToken, DonationController.getDonationHistory);
 
 // Error Handling Middleware
 router.use(errorHandler);

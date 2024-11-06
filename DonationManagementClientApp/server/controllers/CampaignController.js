@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Campaign = require('../models/Campaigns');
-const Donation = require('../models/Donations');
+const Donation = require('../models/ProjectListing');
 const multer = require('multer');
 
 // Create a new campaign (Orphanage only)

@@ -9,6 +9,9 @@ import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
 
+const scale = size => (width / 375) * size; // Adjust the base width as needed
+const scaleHeight = size => (height / 667) * size; // Adjust the base height as needed
+
 // Validation schema for login form
 const LoginSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
@@ -26,7 +29,7 @@ const Donor_Login = ({ navigation }) => {
   const handleLogin = async (values) => {
     setIsSubmitting(true);
     try {
-      const hardcodedUrl = 'http://192.168.224.200:5001/api'; 
+      const hardcodedUrl = 'http://192.168.179.200:5001/api'; 
       const apiUrl = API_URL || hardcodedUrl;
 
       console.log('Using API URL:', apiUrl);
@@ -125,54 +128,54 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: scale(20), // Use scale for padding
     backgroundColor: '#fff',
   },
   title: {
-    fontSize: width * 0.1,
-    paddingTop: 50,
+    fontSize: scale(width * 0.1), // Scale the font size
+    paddingTop: scale(50), // Scale padding
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 50,
+    marginBottom: scale(50), // Scale margin
     color: '#1E201E',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f1f1f1',
-    padding: 5,
-    borderRadius: 12,
-    marginBottom: height * 0.02,  // Responsive margin
+    padding: scale(5), // Scale padding
+    borderRadius: scale(12), // Scale border radius
+    marginBottom: scaleHeight(20), // Use scaleHeight for responsive margin
   },
   input: {
     flex: 1,
-    padding: 10,
-    borderRadius: 5,
+    padding: scale(10), // Scale padding
+    borderRadius: scale(5), // Scale border radius
   },
   icon: {
-    paddingHorizontal: 10,
+    paddingHorizontal: scale(10), // Scale padding
     color: '#434242',
   },
   eyeIcon: {
-    paddingHorizontal: 10,
+    paddingHorizontal: scale(10), // Scale padding
     color: '#434242',
   },
   button: {
     backgroundColor: '#201E43',
-    padding: 15,
-    borderRadius: 15,
+    padding: scale(15), // Scale padding
+    borderRadius: scale(15), // Scale border radius
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: scaleHeight(10), // Use scaleHeight for responsive margin
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: scale(20), // Scale font size
   },
   optionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: scaleHeight(10), // Use scaleHeight for responsive margin
   },
   linkText: {
     color: '#4A90E2',
@@ -181,9 +184,10 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: 'red',
-    fontSize: 12,
-    marginBottom: 10,
+    fontSize: scale(12), // Scale font size
+    marginBottom: scale(10), // Scale margin
   },
 });
+
 
 export default Donor_Login;

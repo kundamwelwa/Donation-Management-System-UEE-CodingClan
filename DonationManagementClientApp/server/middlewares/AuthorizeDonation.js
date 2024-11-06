@@ -1,11 +1,16 @@
 // middlewares/authorizeDonation.js
 
-const Donation = require('../models/Donations'); // Adjust the path as necessary
+const Donation = require('../models/ProjectListing'); // Adjust the path as necessary
 
 // Middleware to authorize user access to a specific donation
 const authorizeDonation = async (req, res, next) => {
   try {
     const donationId = req.params.id; // Assuming donation ID is in the route parameter 'id'
+
+    // Validate that donationId exists
+    if (!donationId) {
+      return res.status(400).json({ message: 'Donation ID is required.' });
+    }
 
     // Fetch the donation from the database
     const donation = await Donation.findById(donationId);
@@ -15,7 +20,7 @@ const authorizeDonation = async (req, res, next) => {
     }
 
     // Check if the authenticated user is the owner of the donation
-    if (donation.donor.toString() !== req.user.id) {
+    if (!req.user || donation.donor.toString() !== req.user.id) {
       return res.status(403).json({ message: 'You are not authorized to access this donation.' });
     }
 
