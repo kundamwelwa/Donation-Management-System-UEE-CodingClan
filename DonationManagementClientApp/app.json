@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/Images/Splash.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -28,6 +28,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

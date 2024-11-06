@@ -1,41 +1,44 @@
-import React from "react";
-import { Image, TouchableOpacity, ImageBackground, StyleSheet, View } from "react-native";
+import React from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const localimage = require("../assets/register.png");
-
-
-const Register =  (props) => {
-
-  const onPress = () => {
-    props.navigation.navigate('Dashboard');
-  };
-
-  return(
-    <ImageBackground source={localimage} resizeMode='cover' style={styles.container}>
-    <TouchableOpacity onPress={onPress}>
-      <Image source={require("../assets/regbtn.png")} style={styles.logo}></Image>
-    </TouchableOpacity>
-  </ImageBackground>
+const Register = (props) => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Register</Text>
+      <TextInput placeholder="Username" style={styles.input} />
+      <TextInput placeholder="Password" style={styles.input} secureTextEntry />
+      <TouchableOpacity style={styles.button} onPress={() => props.navigation.navigate('Login')}>
+        <Text style={styles.buttonText}>Register</Text>
+      </TouchableOpacity>
+    </View>
   );
-   
- 
-  };
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor:"#fff"
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  image: {
-    flex: 1,
-    justifyContent: "center"
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
   },
-  logo: {
-    width: 330,
-    height: 55,
-    marginTop:500
+  input: {
+    width: '80%',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    padding: 15,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
   },
 });
 
