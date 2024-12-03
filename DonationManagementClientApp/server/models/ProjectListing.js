@@ -56,6 +56,11 @@ const projectListingSchema = new mongoose.Schema(
       enum: ['active', 'completed', 'failed'],
       default: 'active',
     },
+    orphanage: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Orphanages', // Referencing the Orphanage model
+      required: [true, 'Orphanage is required'], // Ensures every project has an associated orphanage
+    },
   },
   { timestamps: true }
 );

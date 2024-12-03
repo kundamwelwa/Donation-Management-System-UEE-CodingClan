@@ -24,7 +24,7 @@ const { width, height } = Dimensions.get('window');
 const scale = size => (width / 375) * size;
 const scaleHeight = size => (height / 667) * size;
 
-const ProjectListing = () => {
+const ProjectListing = ({ navigation }) => {
   const [projectName, setProjectName] = useState('');
   const [description, setDescription] = useState('');
   const [projectType, setProjectType] = useState('');
@@ -54,10 +54,9 @@ const ProjectListing = () => {
         quality: 1,
       });
 
-      if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets?.length > 0) {
         setImageUri(result.assets[0].uri);
-      } else {
-        console.log('Image picker canceled or no asset returned.');
+        setImageName(result.assets[0].fileName || 'uploaded-image');
       }
     } catch (error) {
       console.error('Image picker error:', error);
@@ -66,7 +65,7 @@ const ProjectListing = () => {
   };
 
   const handleSubmit = async () => {
-    if (!projectName || !description || !projectType || !location || !category || !projectedAmount ) {
+    if (!projectName || !description || !projectType || !location || !category || !projectedAmount) {
       Alert.alert('Error', 'Please fill in all fields and upload an image.');
       return;
     }
@@ -74,6 +73,17 @@ const ProjectListing = () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Error', 'You are not logged in. Please log in again.');
+        navigation.navigate('Donor_Login');
+        return;
+      }
+
+      if (!API_URL) {
+        console.error('API_URL is not defined. Check your .env file.');
+        throw new Error('API_URL is missing.');
+      }
+
       const headers = {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'multipart/form-data',
@@ -98,18 +108,24 @@ const ProjectListing = () => {
         });
       }
 
-      const apiUrl = API_URL || 'http://192.168.179.200:5001/api';
-      const response = await axios.post(`${apiUrl}/projects/createProject`, formData, { headers, timeout: 10000 });
+      console.log('Using API_URL:', API_URL);
+
+      const response = await axios.post(`${API_URL}/projects/createProject`, formData, {
+        headers,
+        timeout: 10000,
+      });
 
       if (response.status === 200 || response.status === 201) {
         Alert.alert('Success', 'Project created successfully!');
         resetForm();
       } else {
+        console.warn('Unexpected response status:', response.status);
         Alert.alert('Warning', 'Project created, but response status not as expected.');
       }
     } catch (error) {
       console.error('Error creating project:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to create project. Please check your network and try again.';
+      const errorMessage =
+        error.response?.data?.message || 'Failed to create project. Please check your network and try again.';
       Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
@@ -250,7 +266,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: scaleHeight(70), // Adds extra padding at the bottom
     padding: scale(16),
-    backgroundColor: '#f7f8fa',
+    backgroundColor: '#f8f9fa',
   },
 
   heading: {

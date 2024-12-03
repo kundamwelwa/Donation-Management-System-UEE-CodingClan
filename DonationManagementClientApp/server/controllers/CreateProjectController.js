@@ -1,46 +1,45 @@
 const mongoose = require('mongoose');
-const Project = require('../models/ProjectListing'); // Adjust path if needed
-const multer = require('multer'); // For handling file uploads if needed
+const Project = require('../models/ProjectListing'); 
+const multer = require('multer');
 
-// Create a new project (Orphanage only)
+
 exports.createProject = async (req, res) => {
   try {
-    // Extract project details from the request body
-    const {projectName, description, projectType, projectedAmount, category, startDate, endDate, location } = req.body;
+    const { projectName, description, projectType, projectedAmount, category, startDate, endDate, location } = req.body;
 
-    // Check if all required fields are present
     if (!projectName || !description || !projectType || !projectedAmount || !category || !startDate || !endDate || !location) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    // Validate the file upload (if image is required)
     if (!req.file) {
       return res.status(400).json({ message: 'Image is required' });
     }
-
-    // Capture the image URI from multer's file path
-    const imageUri = req.file.path; // Adjust if multer's configuration saves to a different path
-
-    // Create a new project instance
+    const imageUri = req.file.path;
     const newProject = new Project({
-      projectName: projectName, // Ensure name field aligns with schema's name property
+      projectName: projectName,
       description,
       projectType,
       projectedAmount,
-      currentAmount: 0, // Default to 0 when creating
-      status: 'active', // Default status
+      currentAmount: 0, 
+      status: 'active', 
       category,
       startDate,
       endDate,
       location,
       imageUri,
-      orphanage: req.user.id, // Assuming the orphanage ID is available in the token
+      Orphanage: req.user.id, 
     });
 
-    // Save the project to the database
     const savedProject = await newProject.save();
 
-    // Return only necessary details
+    const Orphanage = await Orphanage.findById(req.user.id);
+    if (!Orphanage) {
+      return res.status(404).json({ message: 'Orphanage not found' });
+    }
+
+    Orphanage.projects.push(savedProject._id);
+    await Orphanage.save(); 
+
     res.status(201).json({
       id: savedProject._id,
       projectName: savedProject.projectName,
@@ -62,12 +61,12 @@ exports.createProject = async (req, res) => {
 };
 
 
-// Get all projects
+
 exports.getAllProjects = async (_req, res) => {
   try {
     const projects = await Project.find()
-      .populate('orphanage', 'orphanageName coverPhoto') // Populate orphanage details
-      .select('projectName description projectedAmount currentAmount status orphanage category startDate endDate imageUri');
+      .populate('Orphanage', 'OrphanageName coverPhoto') 
+      .select('projectName description projectedAmount currentAmount status Orphanage category startDate endDate imageUri');
 
     if (projects.length === 0) {
       return res.status(200).json({ message: 'No projects available yet.' });
@@ -91,7 +90,7 @@ exports.getProjectById = async (req, res) => {
     }
 
     const project = await Project.findById(id)
-      .populate('orphanage', 'orphanageName coverPhoto')
+      .populate('Orphanage', 'OrphanageName coverPhoto')
       .select('projectName description projectedAmount currentAmount status category startDate endDate imageUri');
 
     if (!project) {
@@ -153,12 +152,12 @@ exports.deleteProject = async (req, res) => {
   }
 };
 
-// Get projects posted by the logged-in orphanage
+// Get projects posted by the logged-in Orphanage
 exports.getMyProjects = async (req, res) => {
   try {
-    const orphanageId = req.user.id; // Assuming the orphanage ID is available in the token
-    const projects = await Project.find({ orphanage: orphanageId })
-      .populate('orphanage', 'orphanageName coverPhoto')
+    const OrphanageId = req.user.id; // Assuming the Orphanage ID is available in the token
+    const projects = await Project.find({ Orphanage: OrphanageId })
+      .populate('Orphanage', 'OrphanageName coverPhoto')
       .select('projectName description projectedAmount currentAmount status category startDate endDate imageUri');
 
     if (projects.length === 0) {

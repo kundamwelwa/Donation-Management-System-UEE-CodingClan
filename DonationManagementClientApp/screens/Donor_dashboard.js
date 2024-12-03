@@ -24,25 +24,37 @@ const Donor_Dashboard = ({ navigation }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Retrieve token
         const token = await AsyncStorage.getItem('token');
         if (!token) {
           Alert.alert('Error', 'You are not logged in. Please log in again.');
           navigation.navigate('Donor_Login');
           return;
         }
-
+  
+        // Validate API_URL
+        if (!API_URL) {
+          console.error("API_URL is not defined.");
+          throw new Error("API_URL is missing. Please check your environment configuration.");
+        }
+  
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http://192.168.179.200:5001/api';
-
-        const userResponse = await axios.get(`${apiUrl}/auth/getUser`, { headers });
+  
+        console.log("Using API URL:", API_URL);
+  
+        // Fetch user data
+        const userResponse = await axios.get(`${API_URL}/auth/getUser`, { headers });
         setUserName(userResponse.data.name);
-
-        const orphanagesResponse = await axios.get(`${apiUrl}/orphanages/getAllOrphanages`, { headers });
+  
+        // Fetch orphanage cards
+        const orphanagesResponse = await axios.get(`${API_URL}/orphanages/getAllOrphanages`, { headers });
         setOrphanageCards(orphanagesResponse.data);
-
-        const donationsResponse = await axios.get(`${apiUrl}/donations/getDonationHistory`, { headers });
+  
+        // Fetch donation history
+        const donationsResponse = await axios.get(`${API_URL}/donations/getDonationHistory`, { headers });
         setDonationHistory(donationsResponse.data);
-
+  
+        // Set current date
         const date = new Date().toLocaleDateString('en-GB', {
           weekday: 'short',
           day: 'numeric',
@@ -50,15 +62,17 @@ const Donor_Dashboard = ({ navigation }) => {
         });
         setCurrentDate(date);
       } catch (error) {
+        // Log and display error
         setError('Error fetching data. Please try again later.');
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error.response ? error.response.data : error.message);
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
+  
 
   useEffect(() => {
     StatusBar.setTranslucent(true); // Make the status bar translucent
@@ -70,36 +84,39 @@ const Donor_Dashboard = ({ navigation }) => {
     setActiveSection(section);
   };
 
-  const renderOrphanageCard = ({ item }) => (
-    <Card key={item._id} style={styles.card}>
-      <View style={styles.coverPhotoContainer}>
-        <Image
-          source={item.coverPhoto && typeof item.coverPhoto === 'string' ? { uri: item.coverPhoto } : defaultCoverPhoto}
-          style={styles.coverPhoto}
-        />
-      </View>
-      <View style={styles.cardFooter}>
-        <Text style={styles.cardTitle}>{item.orphanageName}</Text>
-        <View style={styles.infoContainer}>
-          <View style={styles.infoItem}>
-            <FontAwesome name="map-marker" size={16} color="#474F7A" />
-            <Text style={styles.infoText}>{item.physicalAddress}</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <FontAwesome name="child" size={16} color="#474F7A" />
-            <Text style={styles.infoText}>{item.numberOfChildren}</Text>
-          </View>
+  const renderOrphanageCard = ({ item }) => {
+    return (
+      <Card key={item._id} style={styles.card}>
+        <View style={styles.coverPhotoContainer}>
+          <Image
+            source={item.coverPhoto && typeof item.coverPhoto === 'string' ? { uri: item.coverPhoto } : defaultCoverPhoto}
+            style={styles.coverPhoto}
+          />
         </View>
-        <TouchableOpacity
-          style={styles.exploreButton}
-          onPress={() => navigation.navigate('Orphanage_Feed', { orphanageId: item._id })}
-        >
-          <Text style={styles.exploreButtonText}>Explore</Text>
-          <FontAwesome name="arrow-right" size={20} color="white" />
-        </TouchableOpacity>
-      </View>
-    </Card>
-  );
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardTitle}>{item.orphanageName}</Text>
+          <View style={styles.infoContainer}>
+            <View style={styles.infoItem}>
+              <FontAwesome name="map-marker" size={16} color="#474F7A" />
+              <Text style={styles.infoText}>{item.physicalAddress}</Text>
+            </View>
+            <View style={styles.infoItem}>
+              <FontAwesome name="child" size={16} color="#474F7A" />
+              <Text style={styles.infoText}>{item.numberOfChildren}</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.exploreButton}
+            onPress={() => navigation.navigate('Orphanage_Feed', { orphanageId: item._id })} // Pass orphanageId to Orphanage_Feed
+          >
+            <Text style={styles.exploreButtonText}>Explore</Text>
+            <FontAwesome name="arrow-right" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+      </Card>
+    );
+  };
+  
 
   const renderDonationHistory = ({ item }) => (
     <View style={styles.historyCard}>
@@ -245,6 +262,7 @@ const Donor_Dashboard = ({ navigation }) => {
     </View>
   );
 };
+
 
 
 const styles = StyleSheet.create({

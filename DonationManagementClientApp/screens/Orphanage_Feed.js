@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, TextInput, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Dimensions, Image, TextInput, ScrollView, ActivityIndicator, Alert, StatusBar } from 'react-native';
 import { Card, ProgressBar } from 'react-native-paper';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from '@env';
+import moment from 'moment';
 
 const { width, height } = Dimensions.get('window');
 
 const Orphanage_Feed = ({ route, navigation }) => {
-  const { getOrphanageById } = route.params;
+  const { orphanageId } = route.params;
   const [orphanageDetails, setOrphanageDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,62 +19,72 @@ const Orphanage_Feed = ({ route, navigation }) => {
   useEffect(() => {
     const fetchOrphanageDetails = async () => {
       try {
+        const trimmedOrphanageId = orphanageId?.trim();
+        if (!trimmedOrphanageId) {
+          console.error("No orphanageId provided.");
+          throw new Error("No orphanageId provided.");
+        }
+
         const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          throw new Error('Unauthorized. Please log in again.');
-        }
+        if (!token) throw new Error('Unauthorized. Please log in again.');
 
+        const apiUrl = `${API_URL}/Orphanages/getOrphanageById/${trimmedOrphanageId}`;
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http://192.168.179.200:5001/api';
 
-        // Log the ID being used for fetching
-        console.log('Fetching orphanage details for ID:', getOrphanageById);
+        const response = await axios.get(apiUrl, { headers });
 
-        // Fetch orphanage details including projects
-        const response = await axios.get(`${apiUrl}/orphanages/${getOrphanageById}`, { headers });
-        setOrphanageDetails(response.data);
-        setFilteredProjects(response.data.projects || []);  // Assuming 'projects' is part of orphanage data
-      } catch (error) {
-        if (error.response) {
-          console.error("Response error:", error.response.data);
-          console.error("Response status:", error.response.status);
-          alert("Failed to load orphanage details: " + error.response.data.message);
-        } else if (error.request) {
-          console.error("Request error:", error.request);
-          alert("Failed to load orphanage details. No response from server.");
+        if (response.data) {
+          setOrphanageDetails(response.data.orphanage);
+          setFilteredProjects(response.data.projects || []);
         } else {
-          console.error("General error:", error.message);
-          alert("Failed to load orphanage details. Please try again.");
+          console.error("Invalid response structure");
+          Alert.alert("Error", "Invalid response structure.");
         }
+      } catch (error) {
+        console.error("Failed to load orphanage details:", error);
+        Alert.alert("Error", "Failed to load orphanage details.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrphanageDetails();
-  }, [getOrphanageById]);
+  }, [orphanageId]);
 
   useEffect(() => {
-    // Filter projects based on search term
-    const searchFilter = (orphanageDetails?.projects || []).filter(project => 
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredProjects(searchFilter);
+    if (orphanageDetails?.projects) {
+      const searchFilter = orphanageDetails.projects.filter((project) =>
+        project.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredProjects(searchFilter);
+    }
   }, [searchTerm, orphanageDetails]);
+
+  const calculateCountdown = (startDate) => {
+    const now = moment();
+    const start = moment(startDate);
+    const duration = moment.duration(start.diff(now));
+
+    return `${duration.days()}d ${duration.hours()}h ${duration.minutes()}m ${duration.seconds()}s`;
+  };
 
   const renderProjectCard = ({ item }) => (
     <Card style={styles.projectCard}>
       <Image source={{ uri: item.image }} style={styles.projectImage} />
       <View style={styles.projectContent}>
-        <Text style={styles.projectTitle}>{item.title}</Text>
+        <Text style={styles.projectTitle}>{item.projectName}</Text>
         <Text style={styles.projectDescription}>{item.description}</Text>
-        <Text style={styles.projectStatus}>{item.status}</Text>
+        <Text style={styles.projectStatus}>Status: {item.status}</Text>
+        <Text style={styles.projectCategory}>Category: {item.category}</Text>
+        <Text style={styles.projectType}>Type: {item.projectType}</Text>
+        <Text style={styles.projectAmount}>Projected Amount: ${item.projectedAmount}</Text>
         <View style={styles.progressContainer}>
           <Text style={styles.progressLabel}>Progress: {item.progress}%</Text>
           <ProgressBar progress={item.progress / 100} color="#FF5722" style={styles.progressBar} />
         </View>
         <Text style={styles.projectLocation}>Location: {item.location}</Text>
+        <Text style={styles.countdown}>Starts in: {calculateCountdown(item.startDate)}</Text>
         <TouchableOpacity 
           style={styles.detailsButton} 
           onPress={() => navigation.navigate('Project_Details', { project: item })}
@@ -88,7 +99,7 @@ const Orphanage_Feed = ({ route, navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#201E43" />
+        <ActivityIndicator size="large" color="#FF5722" />
       </View>
     );
   }
@@ -103,22 +114,25 @@ const Orphanage_Feed = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* StatusBar component */}
+      <StatusBar barStyle="light-content" backgroundColor="#495464" />
+
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{orphanageDetails.name}</Text>
-        <Text style={styles.headerDescription}>{orphanageDetails.description}</Text>
-        <Image source={{ uri: orphanageDetails.image }} style={styles.orphanageImage} />
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search projects..."
-            placeholderTextColor="#888888"
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
-          <TouchableOpacity style={styles.searchIcon}>
-            <MaterialCommunityIcons name="magnify" size={24} color="#201E43" />
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.headerDescription}>{orphanageDetails.physicalAddress}</Text>
+        <Text style={styles.headerDescription}>Number of Children: {orphanageDetails.numberOfChildren}</Text>
+      </View>
+
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search projects..."
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+        />
+        <TouchableOpacity style={styles.searchIcon}>
+          <MaterialCommunityIcons name="magnify" size={24} color="#201E43" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollView}>
@@ -130,7 +144,7 @@ const Orphanage_Feed = ({ route, navigation }) => {
           <FlatList
             data={filteredProjects}
             renderItem={renderProjectCard}
-            keyExtractor={(item) => item.id.toString()} // Ensure the id is converted to a string
+            keyExtractor={(item) => item.id.toString()}
           />
         )}
       </ScrollView>
@@ -140,124 +154,143 @@ const Orphanage_Feed = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: height * 0.04,
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F7F7F7',
+    paddingHorizontal: 1,
   },
   header: {
-    paddingVertical: height * 0.02,
+    paddingVertical: height * 0.04,
+    paddingTop: height * 0.06,
     backgroundColor: '#201E43',
+    borderRadius: 10,
     marginBottom: height * 0.02,
+    paddingHorizontal: width * 0.08,
     alignItems: 'center',
-    paddingHorizontal: width * 0.04,
-    borderBottomRightRadius: 20,
-    borderBottomLeftRadius: 20,
+    shadowColor: '#000000',
+    shadowOpacity: 0.8,
+    shadowRadius: 5,
+    elevation: 3,
   },
   headerTitle: {
-    fontSize: width * 0.06,
-    fontWeight: 'bold',
+    fontSize: width * 0.08,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   headerDescription: {
     fontSize: width * 0.04,
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: height * 0.02,
-  },
-  orphanageImage: {
-    width: '100%',
-    height: width * 0.4,
-    resizeMode: 'cover',
-    borderRadius: 10,
-    marginBottom: height * 0.02,
+    marginTop: 5,
   },
   searchContainer: {
     flexDirection: 'row',
-    marginTop: height * 0.02,
+    marginTop: 20,
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingHorizontal: width * 0.02,
-    shadowColor: '#000000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
+    borderRadius: 10,
+    paddingHorizontal: 15,
     elevation: 3,
-  },
+    width: '90%',  // Set the width to 90% of the screen width
+    alignSelf: 'center',  // This will center the search container horizontally
+},
   searchInput: {
     flex: 1,
     height: height * 0.06,
     fontSize: width * 0.04,
+    color: '#333333',
+    
   },
   searchIcon: {
-    paddingHorizontal: width * 0.02,
+    paddingHorizontal: 10,
   },
   scrollView: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
   projectCard: {
-    marginBottom: height * 0.02,
-    borderRadius: 10,
-    overflow: 'hidden',
+    marginBottom: 20,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
-    marginHorizontal: width * 0.02,
-    shadowColor: '#000000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    padding: 15,
   },
   projectImage: {
     width: '100%',
-    height: width * 0.4,
+    height: width * 0.45,
+    borderRadius: 15,
+    marginBottom: 10,
     resizeMode: 'cover',
   },
   projectContent: {
-    padding: width * 0.04,
+    paddingTop: 10,
   },
   projectTitle: {
-    fontSize: width * 0.05,
+    fontSize: width * 0.06,
     fontWeight: 'bold',
-    color: '#201E43',
-    marginBottom: height * 0.01,
+    color: '#333333',
   },
   projectDescription: {
     fontSize: width * 0.04,
-    color: '#666666',
-    marginBottom: height * 0.01,
+    color: '#555555',
+    marginTop: 5,
+    marginBottom: 10,
   },
   projectStatus: {
     fontSize: width * 0.04,
     color: '#FF5722',
-    marginBottom: height * 0.02,
+  },
+  projectCategory: {
+    fontSize: width * 0.04,
+    color: '#777777',
+  },
+  projectType: {
+    fontSize: width * 0.04,
+    color: '#777777',
+  },
+  projectAmount: {
+    fontSize: width * 0.04,
+    color: '#201E43',
+    marginTop: 10,
   },
   progressContainer: {
-    marginBottom: height * 0.02,
+    marginTop: 10,
   },
   progressLabel: {
     fontSize: width * 0.04,
-    color: '#201E43',
-    marginBottom: height * 0.01,
+    color: '#777777',
   },
   progressBar: {
-    height: height * 0.02,
-    borderRadius: 10,
+    marginTop: 10,
   },
   projectLocation: {
     fontSize: width * 0.04,
-    color: '#888888',
-    marginBottom: height * 0.02,
+    color: '#555555',
+    marginTop: 10,
+  },
+  countdown: {
+    fontSize: width * 0.04,
+    color: '#201E43',
+    marginTop: 10,
   },
   detailsButton: {
-    backgroundColor: '#201E43',
-    paddingVertical: height * 0.015,
-    paddingHorizontal: width * 0.04,
-    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FF5722',
+    borderRadius: 25,
     justifyContent: 'center',
   },
   detailsButtonText: {
-    color: '#FFFFFF',
     fontSize: width * 0.04,
-    marginRight: width * 0.02,
+    color: '#FFFFFF',
+    marginRight: 8,
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
@@ -271,25 +304,17 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: width * 0.05,
-    color: '#FF0000',
+    color: '#FF5722',
   },
-
-  // New styles for the no projects alert
   noProjectsContainer: {
-    padding: height * 0.02,
-    borderRadius: 10,
-    backgroundColor: '#FFEB3B',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: height * 0.02,
-    marginHorizontal: width * 0.02,
+    marginTop: height * 0.05,
   },
   noProjectsText: {
-    fontSize: width * 0.045,
-    fontWeight: 'bold',
-    color: '#201E43',
-    textAlign: 'center',
+    fontSize: width * 0.05,
+    color: '#666666',
   },
-
 });
 
 export default Orphanage_Feed;

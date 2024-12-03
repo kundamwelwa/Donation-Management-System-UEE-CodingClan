@@ -45,7 +45,7 @@ const Orphanage_Dashboard = ({ navigation }) => {
         setOrphanageName(storedOrphanageName || 'Orphanage Name');
 
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http:/192.168.179.200:5001/api';
+        const apiUrl = API_URL || 'http:/192.168.8.100:5001/api';
 
         const userResponse = await axios.get(`${apiUrl}/Orphanages/getOrphanage`, { headers });
         const orphanageData = userResponse.data || {};

@@ -1,7 +1,9 @@
 const Orphanage = require('../models/Orphanages');
 const Donation = require('../models/ProjectListing');
+const projects = require('../models/ProjectListing'); // Ensure this is the correct import path
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+
 
 // Function to generate JWT token for orphanages
 const generateOrphanageToken = (orphanageId) => {
@@ -102,37 +104,97 @@ exports.Orphanagelogin = async (req, res) => {
   }
 };
 
-// Get Orphanage Profile
+exports.getOrphanageById = async (req, res) => {
+  try {
+    const { orphanageId } = req.params; // Extract orphanageId from the request parameters
+    console.log('Orphanage ID:', orphanageId); // Debug log to check ID format
+
+    // Validate if orphanageId is a valid ObjectId  
+    if (!orphanageId || !mongoose.Types.ObjectId.isValid(orphanageId)) {
+      console.error('Invalid Orphanage ID:', orphanageId); // Log invalid IDs
+      return res.status(400).json({ message: 'Invalid orphanage ID format' });
+    }
+
+    // Fetch orphanage and populate its projects
+    const orphanage = await Orphanage.findById(orphanageId).populate('projects'); // Populate 'projects'
+
+    // Handle case where orphanage is not found
+    if (!orphanage) {
+      console.error(`Orphanage not found for ID: ${orphanageId}`);
+      return res.status(404).json({ message: 'Orphanage not found' });
+    }
+
+    // Format orphanage details
+    const orphanageDetails = {
+      id: orphanage._id,
+      name: orphanage.orphanageName,
+      physicalAddress: orphanage.physicalAddress,
+      numberOfChildren: orphanage.numberOfChildren,
+      contactDetails: orphanage.contactDetails,
+    };
+
+    // Format associated projects
+    const projects = orphanage.projects.map((project) => ({
+      id: project._id,
+      projectName: project.projectName,
+      description: project.description,
+      imageUri: project.imageUri,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      progress: project.progress,
+      status: project.status,
+      projectedAmount: project.projectedAmount,
+      currentAmount: project.currentAmount,
+      location: project.location,
+      category: project.category,
+      projectType: project.projectType,
+    }));
+
+    // Respond with the orphanage details and associated projects
+    return res.status(200).json({
+      orphanage: orphanageDetails,
+      projects,
+    });
+  } catch (error) {
+    console.error('Error fetching orphanage details:', error);
+    return res.status(500).json({ message: 'Failed to fetch orphanage details', error: error.message });
+  }
+};
+
+
 exports.getOrphanage = async (req, res) => {
   try {
-    const orphanageId = req.user.id; // Assuming req.user.id holds the logged-in orphanage ID from token
+    const orphanageId = req.user.id; // Get the orphanage ID from the decoded token
 
-    // Check that the orphanage ID is valid
+    // Check if orphanage ID is valid
     if (!orphanageId || !isValidObjectId(orphanageId)) {
       return res.status(400).json({ message: 'Invalid orphanage ID format' });
     }
 
-    // Retrieve orphanage details by ID
+    // Fetch orphanage without populating projects
     const orphanage = await Orphanage.findById(orphanageId);
-    
+
     if (!orphanage) {
       console.log(`GetOrphanage Error: No orphanage found with ID ${orphanageId}.`);
       return res.status(404).json({ message: 'Orphanage not found' });
     }
 
-    // Return the orphanage’s name, address, and children count
-    res.status(200).json({
-      name: orphanage.name,
+    const orphanageDetails = {
+      name: orphanage.orphanageName,
       physicalAddress: orphanage.physicalAddress,
-      numberOfChildren: orphanage.numberOfChildren,
+      numberOfChildren: orphanage.numberOfChildren,     
+    };
+
+    // Return the orphanage details
+    res.status(200).json({
+      orphanage: orphanageDetails,
     });
+
   } catch (error) {
-    console.error('Error fetching orphanage:', error);
+    console.error('Error fetching orphanage details:', error);
     res.status(500).json({ message: 'Failed to fetch orphanage details', error: error.message });
   }
 };
-
-
 
 
 // Get All Orphanages

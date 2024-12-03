@@ -98,7 +98,7 @@ const Campaigns = () => {
         });
       }
   
-      const apiUrl = API_URL || 'http://192.168.179.200:5001/api';
+      const apiUrl = API_URL || 'http://192.168.8.100:5001/api';
       const response = await axios.post(`${apiUrl}/campaigns/create`, formData, { headers, timeout: 10000 });
   
       if (response.status === 200 || response.status === 201) {

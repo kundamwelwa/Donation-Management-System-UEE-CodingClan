@@ -25,7 +25,7 @@ const Orphanage_Login = ({ navigation }) => {
   const handleLogin = async (values) => {
     setLoading(true); // Start loading
     try {
-      const apiUrl = 'http://192.168.179.200:5001/api';
+      const apiUrl = 'http://192.168.8.100:5001/api';
 
       console.log('Using API URL:', apiUrl);
       console.log('Login request payload:', values);

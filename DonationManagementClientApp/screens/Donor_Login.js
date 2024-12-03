@@ -9,8 +9,8 @@ import { API_URL } from '@env';
 
 const { width, height } = Dimensions.get('window');
 
-const scale = size => (width / 375) * size; // Adjust the base width as needed
-const scaleHeight = size => (height / 667) * size; // Adjust the base height as needed
+const scale = size => (width / 375) * size;
+const scaleHeight = size => (height / 667) * size;
 
 // Validation schema for login form
 const LoginSchema = Yup.object().shape({
@@ -21,7 +21,6 @@ const LoginSchema = Yup.object().shape({
     .required('Password is required'),
 });
 
-// Component definition
 const Donor_Login = ({ navigation }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,28 +28,37 @@ const Donor_Login = ({ navigation }) => {
   const handleLogin = async (values) => {
     setIsSubmitting(true);
     try {
-      const hardcodedUrl = 'http://192.168.179.200:5001/api'; 
-      const apiUrl = API_URL || hardcodedUrl;
+      // Validate API_URL
+      if (!API_URL) {
+        console.error("API_URL is not defined.");
+        throw new Error("API_URL is missing. Please check your environment configuration.");
+      }
 
-      console.log('Using API URL:', apiUrl);
-      console.log('Login request payload:', values);
+      console.log("Using API URL:", API_URL);
+      console.log("Login request payload:", values);
 
-      const response = await axios.post(`${apiUrl}/auth/login`, values);
-      console.log('Login response:', response.data);
+      // Send login request
+      const response = await axios.post(`${API_URL}/auth/login`, values);
+      console.log("Login response:", response.data);
 
+      // Check for invalid login response
       if (response.data.message === 'Invalid email or password') {
         throw new Error('Invalid email or password');
       }
 
+      // Save token and user information
       const { token, user } = response.data;
       await AsyncStorage.setItem('token', token);
       await AsyncStorage.setItem('userName', user.name);
 
-      Alert.alert('Login Successful', 'You have logged in successfully.');
+      Alert.alert("Login Successful", "You have logged in successfully.");
       navigation.navigate('Donor_dashboard', { userName: user.name });
     } catch (error) {
-      console.error('Login Error:', error.response ? error.response.data : error.message);
-      Alert.alert('Login Failed', error.response?.data?.message || 'An unexpected error occurred. Please try again.');
+      console.error("Login Error:", error.response ? error.response.data : error.message);
+      Alert.alert(
+        "Login Failed",
+        error.response?.data?.message || "An unexpected error occurred. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }

@@ -48,6 +48,10 @@ const orphanageSchema = new mongoose.Schema({
     required: true,
     minlength: 8, // Match frontend validation requirement
   },
+  projects: [{  // New field to reference associated projects
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ProjectListing',  // Referencing the Project model
+  }],
 }, { timestamps: true });
 
 // Pre-save hook to hash password if modified
@@ -76,4 +80,4 @@ orphanageSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('Orphanage', orphanageSchema); // Updated model name
+module.exports = mongoose.model('Orphanage', orphanageSchema);
