@@ -19,8 +19,8 @@ const completedProjects = [
 const Orphanage_Dashboard = ({ navigation }) => {
   const [activeSection, setActiveSection] = useState('home');
   const [orphanageName, setOrphanageName] = useState('');
-  const [location, setLocation] = useState('');
-  const [numberOfChildren, setNumberOfChildren] = useState(0);
+  const [location, setLocation] = useState('Location not provided');
+  const [numberOfChildren, setNumberOfChildren] = useState('N/A');
   const [totalDonations, setTotalDonations] = useState(0);
   const [fabOpen, setFabOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(3);
@@ -45,16 +45,22 @@ const Orphanage_Dashboard = ({ navigation }) => {
         setOrphanageName(storedOrphanageName || 'Orphanage Name');
 
         const headers = { Authorization: `Bearer ${token}` };
-        const apiUrl = API_URL || 'http:/192.168.8.100:5001/api';
 
-        const userResponse = await axios.get(`${apiUrl}/Orphanages/getOrphanage`, { headers });
-        const orphanageData = userResponse.data || {};
-        const { physicalAddress, numberOfChildren, totalDonations } = orphanageData;
+        if (!API_URL) {
+          console.error('API_URL is not defined in the environment variables.');
+          throw new Error('API_URL is missing.');
+        }
 
-        if (isMounted) {
-          setLocation(physicalAddress || 'Location not provided');
-          setNumberOfChildren(typeof numberOfChildren === 'number' ? numberOfChildren : 'N/A');
-          setTotalDonations(totalDonations || 0);
+        const userResponse = await axios.get(`${API_URL}/Orphanages/getOrphanage`, { headers });
+        const orphanageData = userResponse.data.orphanage;
+
+        if (isMounted && orphanageData) {
+          setLocation(orphanageData.physicalAddress || 'Location not provided');
+          setNumberOfChildren(
+            typeof orphanageData.numberOfChildren === 'number' ? orphanageData.numberOfChildren : 'N/A'
+          );
+        } else {
+          console.error('Unexpected API response:', userResponse.data);
         }
       } catch (error) {
         console.error('Error fetching data:', error.message);
@@ -93,24 +99,23 @@ const Orphanage_Dashboard = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
 
-        {/* User Card */}
-        <ImageBackground source={userCardBackgroundImage} style={styles.userCard}>
-            <View style={styles.userCardOverlay} />
-            <Text style={styles.userName}>{orphanageName}</Text>
-            <View style={styles.userInfoContainer}>
-              <View style={styles.infoItem}>
-                <FontAwesome name="map-marker" size={18} color="white" />
-                <Text style={styles.infoText}>{location}</Text>
-              </View>
-              <View style={styles.infoItem}>
-                <FontAwesome name="child" size={18} color="white" />
-                <Text style={styles.infoText}>
-                  {numberOfChildren !== 'N/A' ? `${numberOfChildren} children` : 'N/A'}
-                </Text>
-              </View>
-            </View>
-          </ImageBackground>
-
+      {/* User Card */}
+      <ImageBackground source={userCardBackgroundImage} style={styles.userCard}>
+        <View style={styles.userCardOverlay} />
+        <Text style={styles.userName}>{orphanageName}</Text>
+        <View style={styles.userInfoContainer}>
+          <View style={styles.infoItem}>
+            <FontAwesome name="map-marker" size={18} color="white" />
+            <Text style={styles.infoText}>{location}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <FontAwesome name="child" size={18} color="white" />
+            <Text style={styles.infoText}>
+              {numberOfChildren !== 'N/A' ? `${numberOfChildren} children` : 'N/A'}
+            </Text>
+          </View>
+        </View>
+      </ImageBackground>
 
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -119,11 +124,11 @@ const Orphanage_Dashboard = ({ navigation }) => {
             </View>
           ) : (
             <>
-              {/* Donations Card */}
-              <View style={styles.donationsCard}>
-                <Text style={styles.donationsText}>Total Donations:</Text>
-                <Text style={styles.donationsAmount}>${totalDonations.toLocaleString()}</Text>
-              </View>
+               {/* Donations Card */}
+      <View style={styles.donationsCard}>
+        <Text style={styles.donationsText}>Total Donations:</Text>
+        <Text style={styles.donationsAmount}>${totalDonations.toLocaleString()}</Text>
+      </View>
 
 
                

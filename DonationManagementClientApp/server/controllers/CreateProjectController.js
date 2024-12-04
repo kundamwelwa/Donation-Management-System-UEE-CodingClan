@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Orphanage = require('../models/Orphanages'); // Adjust the path based on your project structure
 const Project = require('../models/ProjectListing'); 
 const multer = require('multer');
 
@@ -7,39 +8,52 @@ exports.createProject = async (req, res) => {
   try {
     const { projectName, description, projectType, projectedAmount, category, startDate, endDate, location } = req.body;
 
+    // Check for missing fields
     if (!projectName || !description || !projectType || !projectedAmount || !category || !startDate || !endDate || !location) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
+    // Check for uploaded file
     if (!req.file) {
       return res.status(400).json({ message: 'Image is required' });
     }
+
+    // Verify authenticated user
+    console.log('req.user:', req.user);
+    if (!req.user || !req.user.id) {
+      return res.status(400).json({ message: 'User is not authenticated.' });
+    }
+
+    // Verify orphanage exists
+    const orphanage = await Orphanage.findById(req.user.id);
+    if (!orphanage) {
+      return res.status(404).json({ message: 'Orphanage not found.' });
+    }
+
+    // Create new project
     const imageUri = req.file.path;
     const newProject = new Project({
-      projectName: projectName,
+      projectName,
       description,
       projectType,
       projectedAmount,
-      currentAmount: 0, 
-      status: 'active', 
+      currentAmount: 0,
+      status: 'active',
       category,
       startDate,
       endDate,
       location,
       imageUri,
-      Orphanage: req.user.id, 
+      orphanage: req.user.id, // Associate with authenticated orphanage
     });
 
     const savedProject = await newProject.save();
 
-    const Orphanage = await Orphanage.findById(req.user.id);
-    if (!Orphanage) {
-      return res.status(404).json({ message: 'Orphanage not found' });
-    }
+    // Add project to orphanage's list
+    orphanage.projects.push(savedProject._id);
+    await orphanage.save();
 
-    Orphanage.projects.push(savedProject._id);
-    await Orphanage.save(); 
-
+    // Send response
     res.status(201).json({
       id: savedProject._id,
       projectName: savedProject.projectName,
@@ -52,15 +66,14 @@ exports.createProject = async (req, res) => {
       endDate: savedProject.endDate,
       location: savedProject.location,
       status: savedProject.status,
-      imageUri: savedProject.imageUri, // Include image URI in response
+      imageUri: savedProject.imageUri,
     });
   } catch (error) {
     console.error('Error creating project:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
-
-
+;
 
 exports.getAllProjects = async (_req, res) => {
   try {

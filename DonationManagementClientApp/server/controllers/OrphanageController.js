@@ -4,17 +4,13 @@ const projects = require('../models/ProjectListing'); // Ensure this is the corr
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
-
-// Function to generate JWT token for orphanages
 const generateOrphanageToken = (orphanageId) => {
-  const secret = process.env.JWT_SECRET || 'default_secret'; // Replace with your actual secret
+  const secret = process.env.JWT_SECRET || 'default_secret'; 
   return jwt.sign({ id: orphanageId }, secret, { expiresIn: '1d' });
 };
 
-// Helper function to validate ObjectId
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
-// Orphanage Signup
 exports.Orphanagesignup = async (req, res) => {
   const {
     orphanageName,
@@ -31,13 +27,13 @@ exports.Orphanagesignup = async (req, res) => {
   } = req.body;
 
   try {
-    // Check if orphanage already exists
+
     const existingOrphanage = await Orphanage.findOne({ email: email.toLowerCase() });
     if (existingOrphanage) {
       return res.status(400).json({ message: 'Orphanage already registered with this email.' });
     }
 
-    // Create new orphanage
+    
     const newOrphanage = new Orphanage({
       orphanageName,
       regNumber,
@@ -48,15 +44,14 @@ exports.Orphanagesignup = async (req, res) => {
       physicalAddress,
       contactDetails,
       numberOfChildren,
-      password, // Password will be hashed via pre-save hook in the model
+      password, 
       coverPhoto,
-      donors: [], // Initialize donors array
+      donors: [], 
     });
 
-    // Save to database (password hashing occurs here)
+    
     await newOrphanage.save();
 
-    // Generate JWT token
     const token = generateOrphanageToken(newOrphanage._id);
 
     res.status(201).json({ message: 'Orphanage registered successfully', token });
@@ -66,7 +61,6 @@ exports.Orphanagesignup = async (req, res) => {
   }
 };
 
-// Orphanage Login
 exports.Orphanagelogin = async (req, res) => {
   const { email, password } = req.body;
 
@@ -91,12 +85,11 @@ exports.Orphanagelogin = async (req, res) => {
 
     const token = generateOrphanageToken(orphanage._id);
     
-    // Include orphanage ID in the response
     res.status(200).json({
       message: 'Login successful',
       token,
       name: orphanage.orphanageName,
-      id: orphanage._id // Include orphanage ID in the response
+      id: orphanage._id 
     });
   } catch (error) {
     console.error('Error during orphanage login:', error);
@@ -106,25 +99,27 @@ exports.Orphanagelogin = async (req, res) => {
 
 exports.getOrphanageById = async (req, res) => {
   try {
-    const { orphanageId } = req.params; // Extract orphanageId from the request parameters
-    console.log('Orphanage ID:', orphanageId); // Debug log to check ID format
-
-    // Validate if orphanageId is a valid ObjectId  
+    const { orphanageId } = req.params; 
+    console.log('Orphanage ID received:', orphanageId); 
+    
+    // Check if ID is valid
     if (!orphanageId || !mongoose.Types.ObjectId.isValid(orphanageId)) {
-      console.error('Invalid Orphanage ID:', orphanageId); // Log invalid IDs
+      console.error('Invalid Orphanage ID format:', orphanageId); 
       return res.status(400).json({ message: 'Invalid orphanage ID format' });
     }
 
-    // Fetch orphanage and populate its projects
-    const orphanage = await Orphanage.findById(orphanageId).populate('projects'); // Populate 'projects'
+    // Fetch orphanage and populate projects
+    const orphanage = await Orphanage.findById(orphanageId).populate('projects'); 
 
-    // Handle case where orphanage is not found
     if (!orphanage) {
       console.error(`Orphanage not found for ID: ${orphanageId}`);
       return res.status(404).json({ message: 'Orphanage not found' });
     }
 
-    // Format orphanage details
+    console.log('Orphanage Found:', orphanage.orphanageName);
+    console.log('Number of Projects:', orphanage.projects.length);
+
+    // Prepare orphanage details
     const orphanageDetails = {
       id: orphanage._id,
       name: orphanage.orphanageName,
@@ -133,12 +128,12 @@ exports.getOrphanageById = async (req, res) => {
       contactDetails: orphanage.contactDetails,
     };
 
-    // Format associated projects
+    // Prepare projects array
     const projects = orphanage.projects.map((project) => ({
       id: project._id,
       projectName: project.projectName,
       description: project.description,
-      imageUri: project.imageUri,
+      imageUri: `http://192.168.8.100:5001/upload/${project.imageUri}`,  // Ensure this path points to where your images are hosted
       startDate: project.startDate,
       endDate: project.endDate,
       progress: project.progress,
@@ -150,7 +145,9 @@ exports.getOrphanageById = async (req, res) => {
       projectType: project.projectType,
     }));
 
-    // Respond with the orphanage details and associated projects
+    console.log('Projects Data Prepared:', projects);
+
+    // Respond with data
     return res.status(200).json({
       orphanage: orphanageDetails,
       projects,
@@ -162,16 +159,16 @@ exports.getOrphanageById = async (req, res) => {
 };
 
 
+
+
 exports.getOrphanage = async (req, res) => {
   try {
-    const orphanageId = req.user.id; // Get the orphanage ID from the decoded token
+    const orphanageId = req.user.id; // Get the orphanage ID from the token
 
-    // Check if orphanage ID is valid
     if (!orphanageId || !isValidObjectId(orphanageId)) {
       return res.status(400).json({ message: 'Invalid orphanage ID format' });
     }
 
-    // Fetch orphanage without populating projects
     const orphanage = await Orphanage.findById(orphanageId);
 
     if (!orphanage) {
@@ -180,16 +177,14 @@ exports.getOrphanage = async (req, res) => {
     }
 
     const orphanageDetails = {
-      name: orphanage.orphanageName,
-      physicalAddress: orphanage.physicalAddress,
-      numberOfChildren: orphanage.numberOfChildren,     
+      name: orphanage.orphanageName || 'Unknown Orphanage',
+      physicalAddress: orphanage.physicalAddress || 'Address not provided',
+      numberOfChildren: typeof orphanage.numberOfChildren === 'number' ? orphanage.numberOfChildren : 'N/A',
     };
 
-    // Return the orphanage details
     res.status(200).json({
       orphanage: orphanageDetails,
     });
-
   } catch (error) {
     console.error('Error fetching orphanage details:', error);
     res.status(500).json({ message: 'Failed to fetch orphanage details', error: error.message });

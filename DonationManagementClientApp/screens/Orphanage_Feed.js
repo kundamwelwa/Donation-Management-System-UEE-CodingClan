@@ -15,34 +15,40 @@ const Orphanage_Feed = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredProjects, setFilteredProjects] = useState([]);
+  const [remainingTimes, setRemainingTimes] = useState({});
 
+  // Fetch orphanage details
   useEffect(() => {
     const fetchOrphanageDetails = async () => {
       try {
         const trimmedOrphanageId = orphanageId?.trim();
         if (!trimmedOrphanageId) {
-          console.error("No orphanageId provided.");
-          throw new Error("No orphanageId provided.");
+          Alert.alert("Error", "No orphanageId provided.");
+          setLoading(false);
+          return;
         }
 
         const token = await AsyncStorage.getItem('token');
-        if (!token) throw new Error('Unauthorized. Please log in again.');
+        if (!token) {
+          Alert.alert('Unauthorized', 'Please log in again.');
+          setLoading(false);
+          return;
+        }
 
         const apiUrl = `${API_URL}/Orphanages/getOrphanageById/${trimmedOrphanageId}`;
         const headers = { Authorization: `Bearer ${token}` };
 
         const response = await axios.get(apiUrl, { headers });
-
         if (response.data) {
           setOrphanageDetails(response.data.orphanage);
           setFilteredProjects(response.data.projects || []);
+          initializeRemainingTimes(response.data.projects || []);
         } else {
-          console.error("Invalid response structure");
-          Alert.alert("Error", "Invalid response structure.");
+          throw new Error("Invalid response structure.");
         }
       } catch (error) {
         console.error("Failed to load orphanage details:", error);
-        Alert.alert("Error", "Failed to load orphanage details.");
+        Alert.alert("Error", `Failed to load orphanage details: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -51,50 +57,92 @@ const Orphanage_Feed = ({ route, navigation }) => {
     fetchOrphanageDetails();
   }, [orphanageId]);
 
+  // Calculate initial remaining times for all projects
+  const initializeRemainingTimes = (projects) => {
+    const times = {};
+    projects.forEach((project) => {
+      times[project.id] = calculateCountdown(project.endDate);
+    });
+    setRemainingTimes(times);
+  };
+
+  // Update remaining times every second
   useEffect(() => {
-    if (orphanageDetails?.projects) {
-      const searchFilter = orphanageDetails.projects.filter((project) =>
-        project.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredProjects(searchFilter);
-    }
-  }, [searchTerm, orphanageDetails]);
+    const interval = setInterval(() => {
+      setRemainingTimes((prevTimes) => {
+        const updatedTimes = {};
+        filteredProjects.forEach((project) => {
+          updatedTimes[project.id] = calculateCountdown(project.endDate);
+        });
+        return updatedTimes;
+      });
+    }, 1000);
 
-  const calculateCountdown = (startDate) => {
+    return () => clearInterval(interval);
+  }, [filteredProjects]);
+
+  // Countdown calculator
+  const calculateCountdown = (endDate) => {
     const now = moment();
-    const start = moment(startDate);
-    const duration = moment.duration(start.diff(now));
-
+    const end = moment(endDate);
+    const duration = moment.duration(end.diff(now));
     return `${duration.days()}d ${duration.hours()}h ${duration.minutes()}m ${duration.seconds()}s`;
   };
 
-  const renderProjectCard = ({ item }) => (
-    <Card style={styles.projectCard}>
-      <Image source={{ uri: item.image }} style={styles.projectImage} />
-      <View style={styles.projectContent}>
-        <Text style={styles.projectTitle}>{item.projectName}</Text>
-        <Text style={styles.projectDescription}>{item.description}</Text>
-        <Text style={styles.projectStatus}>Status: {item.status}</Text>
-        <Text style={styles.projectCategory}>Category: {item.category}</Text>
-        <Text style={styles.projectType}>Type: {item.projectType}</Text>
-        <Text style={styles.projectAmount}>Projected Amount: ${item.projectedAmount}</Text>
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressLabel}>Progress: {item.progress}%</Text>
-          <ProgressBar progress={item.progress / 100} color="#FF5722" style={styles.progressBar} />
+  // Render project card
+  const renderProjectCard = ({ item }) => {
+    const progress = (item.currentAmount / item.projectedAmount) * 100;
+    const remainingTime = remainingTimes[item.id] || 'Loading...';
+
+    return (
+      <Card style={styles.projectCard}>
+        {item.imageUri && (
+          <Image
+            source={{ uri: item.imageUri }}
+            style={styles.projectImage}
+            resizeMode="cover"
+          />
+        )}
+        <View style={styles.projectContent}>
+          <Text style={styles.projectTitle}>{item.projectName}</Text>
+          <Text style={styles.projectDescription}>{item.description}</Text>
+
+          <View style={styles.projectDetails}>
+            <MaterialCommunityIcons name="calendar-check" size={18} color="#FF5722" />
+            <Text style={styles.projectStatus}>Status: {item.status}</Text>
+          </View>
+
+          <View style={styles.projectDetails}>
+            <MaterialCommunityIcons name="shape-outline" size={18} color="#FF5722" />
+            <Text style={styles.projectCategory}>Category: {item.category}</Text>
+          </View>
+
+          <View style={styles.projectDetails}>
+            <MaterialCommunityIcons name="cash" size={18} color="#FF5722" />
+            <Text style={styles.projectAmount}>Projected Amount: ${item.projectedAmount}</Text>
+          </View>
+
+          <View style={styles.progressContainer}>
+            <Text style={styles.progressLabel}>Progress: {progress.toFixed(2)}%</Text>
+            <ProgressBar progress={progress / 100} color="#FF5722" style={styles.progressBar} />
+          </View>
+
+          <View style={styles.projectDetails}>
+            <MaterialCommunityIcons name="clock-outline" size={18} color="#FF5722" />
+            <Text style={styles.countdown}>Time Left: {remainingTime}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.detailsButton}
+            onPress={() => navigation.navigate('Project_Details', { project: item })}
+          >
+            <Text style={styles.detailsButtonText}>Donate</Text>
+            <FontAwesome name="arrow-right" size={20} color="white" />
+          </TouchableOpacity>
         </View>
-        <Text style={styles.projectLocation}>Location: {item.location}</Text>
-        <Text style={styles.countdown}>Starts in: {calculateCountdown(item.startDate)}</Text>
-        <TouchableOpacity 
-          style={styles.detailsButton} 
-          onPress={() => navigation.navigate('Project_Details', { project: item })}
-        >
-          <Text style={styles.detailsButtonText}>View Details</Text>
-          <FontAwesome name="arrow-right" size={20} color="white" />
-        </TouchableOpacity>
-      </View>
-    </Card>
-  );
+      </Card>
+    );
+  };
 
   if (loading) {
     return (
@@ -114,7 +162,6 @@ const Orphanage_Feed = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      {/* StatusBar component */}
       <StatusBar barStyle="light-content" backgroundColor="#495464" />
 
       <View style={styles.header}>
@@ -142,9 +189,11 @@ const Orphanage_Feed = ({ route, navigation }) => {
           </View>
         ) : (
           <FlatList
+            horizontal
             data={filteredProjects}
             renderItem={renderProjectCard}
             keyExtractor={(item) => item.id.toString()}
+            showsHorizontalScrollIndicator={false}
           />
         )}
       </ScrollView>
@@ -155,9 +204,8 @@ const Orphanage_Feed = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     paddingTop: height * 0.04,
-    flex: 1,
-    backgroundColor: '#F7F7F7',
-    paddingHorizontal: 1,
+      flex: 1,
+      backgroundColor: '#F7F7F7',
   },
   header: {
     paddingVertical: height * 0.04,
@@ -168,152 +216,143 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.08,
     alignItems: 'center',
     shadowColor: '#000000',
-    shadowOpacity: 0.8,
+    shadowOpacity: 0.5,
     shadowRadius: 5,
     elevation: 3,
   },
   headerTitle: {
-    fontSize: width * 0.08,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: 24,
+    color: 'white',
+    fontWeight: 'bold',
   },
   headerDescription: {
-    fontSize: width * 0.04,
-    color: '#FFFFFF',
-    textAlign: 'center',
-    marginTop: 5,
+    fontSize: 16,
+    color: '#D1D1D1',
   },
   searchContainer: {
     flexDirection: 'row',
-    marginTop: 20,
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    padding: 10,
+    backgroundColor: '#FFF',
     borderRadius: 10,
-    paddingHorizontal: 15,
-    elevation: 3,
-    width: '90%',  // Set the width to 90% of the screen width
-    alignSelf: 'center',  // This will center the search container horizontally
-},
+    margin: 10,
+    alignItems: 'center',
+  },
   searchInput: {
     flex: 1,
-    height: height * 0.06,
-    fontSize: width * 0.04,
-    color: '#333333',
-    
+    height: 30,
+    paddingLeft: 10,
+    fontSize: 16,
   },
   searchIcon: {
-    paddingHorizontal: 10,
+    marginLeft: 10,
   },
   scrollView: {
-    flexGrow: 1,
     paddingBottom: 20,
   },
   projectCard: {
-    marginBottom: 20,
+    marginHorizontal: 10,
+    marginVertical: 10,
+    width: width * 0.8,
     borderRadius: 15,
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
     elevation: 5,
+    backgroundColor: 'white',
     padding: 15,
   },
   projectImage: {
     width: '100%',
-    height: width * 0.45,
+    height: 200,
     borderRadius: 15,
-    marginBottom: 10,
-    resizeMode: 'cover',
   },
   projectContent: {
     paddingTop: 10,
   },
   projectTitle: {
-    fontSize: width * 0.06,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#333333',
+    marginBottom: 5,
   },
   projectDescription: {
-    fontSize: width * 0.04,
-    color: '#555555',
-    marginTop: 5,
+    fontSize: 14,
+    color: '#666',
     marginBottom: 10,
   },
+  projectDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
   projectStatus: {
-    fontSize: width * 0.04,
-    color: '#FF5722',
+    marginLeft: 10,
+    fontSize: 14,
   },
   projectCategory: {
-    fontSize: width * 0.04,
-    color: '#777777',
+    marginLeft: 10,
+    fontSize: 14,
   },
   projectType: {
-    fontSize: width * 0.04,
-    color: '#777777',
+    marginLeft: 10,
+    fontSize: 14,
   },
   projectAmount: {
-    fontSize: width * 0.04,
-    color: '#201E43',
-    marginTop: 10,
+    marginLeft: 10,
+    fontSize: 14,
   },
   progressContainer: {
     marginTop: 10,
   },
   progressLabel: {
-    fontSize: width * 0.04,
-    color: '#777777',
+    fontSize: 14,
+    color: '#333',
   },
   progressBar: {
-    marginTop: 10,
+    marginTop: 5,
   },
   projectLocation: {
-    fontSize: width * 0.04,
-    color: '#555555',
-    marginTop: 10,
+    marginLeft: 10,
+    fontSize: 14,
   },
   countdown: {
-    fontSize: width * 0.04,
-    color: '#201E43',
-    marginTop: 10,
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#FF5722',
   },
   detailsButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 20,
-    paddingVertical: 12,
-    backgroundColor: '#FF5722',
-    borderRadius: 25,
+    marginTop: 10,
+    backgroundColor: '#001F3F',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 30,
     justifyContent: 'center',
   },
   detailsButtonText: {
-    fontSize: width * 0.04,
-    color: '#FFFFFF',
-    marginRight: 8,
-    fontWeight: '600',
+    color: 'white',
+    fontSize: 16,
+    marginRight: 10,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    fontSize: width * 0.05,
-    color: '#FF5722',
-  },
   noProjectsContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: height * 0.05,
+    marginTop: 20,
   },
   noProjectsText: {
-    fontSize: width * 0.05,
-    color: '#666666',
+    fontSize: 16,
+    color: '#FF5722',
+  },
+  errorContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#FF5722',
   },
 });
 
